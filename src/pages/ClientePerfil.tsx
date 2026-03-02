@@ -200,11 +200,15 @@ export function ClientePerfil() {
   const parcelasProva = app.getParcelasProvaByCliente(id!);
   const inspiracoes = app.getInspiracoesCliente(id!);
 
-  const diasCasamento = cliente.dataCasamento
-    ? differenceInDays(parseISO(cliente.dataCasamento), new Date())
-    : null;
-
   const hojeStr = new Date().toISOString().split('T')[0];
+
+  // Próxima data de entrega de vestido (contrato ativo mais próximo)
+  const proximaEntrega = contratos
+    .filter(c => c.status !== 'cancelado' && c.dataEntrega && c.dataEntrega >= hojeStr)
+    .sort((a, b) => a.dataEntrega.localeCompare(b.dataEntrega))[0] ?? null;
+  const diasEntrega = proximaEntrega
+    ? differenceInDays(parseISO(proximaEntrega.dataEntrega), new Date())
+    : null;
   const tiposProvaAg: TipoAgendamento[] = ['primeira_prova', 'segunda_prova', 'prova_final', 'ajuste'];
   const proximaProva = agendamentos
     .filter(a => tiposProvaAg.includes(a.tipo) && a.data >= hojeStr && a.status !== 'cancelado' && a.status !== 'concluido')
@@ -640,14 +644,16 @@ export function ClientePerfil() {
           </div>
 
           {/* Countdown cards — linha própria para não sobrepor */}
-          {(diasCasamento !== null && diasCasamento >= 0) || proximaProva !== null ? (
+          {(diasEntrega !== null && diasEntrega >= 0) || proximaProva !== null ? (
             <div className="flex gap-2 mt-3">
-              {diasCasamento !== null && diasCasamento >= 0 && (
+              {diasEntrega !== null && diasEntrega >= 0 && (
                 <div className="flex-1 text-center rounded-2xl border border-gray-200 px-3 py-2.5 bg-gray-50 min-w-0">
                   <p className="text-2xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    {diasCasamento}
+                    {diasEntrega === 0 ? '🎀' : diasEntrega}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5 leading-tight">dias p/ casamento</p>
+                  <p className="text-xs text-gray-400 mt-0.5 leading-tight">
+                    {diasEntrega === 0 ? 'entrega hoje!' : 'dias p/ entrega'}
+                  </p>
                 </div>
               )}
               <div className={`flex-1 text-center rounded-2xl border px-3 py-2.5 min-w-0 ${
