@@ -16,6 +16,7 @@ const KEYS = {
   parcelasProva: 'atelie_parcelas_prova',
   config: 'atelie_config',
   auth: 'atelie_auth',
+  seeded: 'atelie_seeded',   // flag permanente — seed só roda uma vez por browser
 };
 
 function get<T>(key: string): T[] {
@@ -265,8 +266,16 @@ export const authStorage = {
 };
 
 // ── Seed Data ─────────────────────────────────────────────────────────────────
+// Limpa TODOS os dados e remove a flag de seed (útil para começar do zero)
+export function clearAllData() {
+  Object.values(KEYS).forEach(key => localStorage.removeItem(key));
+}
+
 export function seedDemoData() {
-  if (clienteStorage.getAll().length > 0) return;
+  // Flag permanente: o seed só roda UMA vez por browser.
+  // Deletar clientes não dispara novo seed.
+  if (localStorage.getItem(KEYS.seeded)) return;
+  localStorage.setItem(KEYS.seeded, 'true');
 
   const today = new Date();
   const fmt = (d: Date) => d.toISOString().split('T')[0];

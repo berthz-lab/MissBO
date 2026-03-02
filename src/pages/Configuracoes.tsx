@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   Settings, MapPin, Car, Fuel, Wrench, Save, ChevronRight,
-  TrendingDown, Navigation, Info, Plus, Trash2, Package
+  TrendingDown, Navigation, Info, Plus, Trash2, Package, AlertTriangle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ConfigSistema, ItemPadraoOrcamento } from '../types';
-import { genId } from '../utils/storage';
+import { genId, clearAllData } from '../utils/storage';
 
 const fmtMoney = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -317,6 +317,28 @@ export function Configuracoes() {
             Nenhum item padrão cadastrado. Adicione acima para pré-preencher orçamentos automaticamente.
           </p>
         )}
+      </div>
+
+      {/* Zona de Perigo */}
+      <div className="card border border-red-100">
+        <h2 className="font-bold text-red-700 mb-1 flex items-center gap-2">
+          <AlertTriangle size={16} className="text-red-500"/> Zona de Perigo
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Apaga <strong>todos</strong> os dados do sistema (clientes, contratos, pagamentos, provas…) e reinicia do zero.
+          Esta ação não pode ser desfeita.
+        </p>
+        <button
+          onClick={() => {
+            if (window.confirm('Tem certeza? Todos os dados serão apagados permanentemente e o sistema voltará em branco.')) {
+              clearAllData();
+              window.location.reload();
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all"
+        >
+          <Trash2 size={14}/> Apagar todos os dados
+        </button>
       </div>
 
       {/* Save */}
