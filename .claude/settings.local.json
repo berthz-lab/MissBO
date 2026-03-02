@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create vite@latest . -- --template react-ts --yes)",
+      "Bash(npm create vite@latest . -- --template react-ts)",
+      "Bash(npm init -y)",
+      "Bash(npm install vite react react-dom typescript @types/react @types/react-dom @vitejs/plugin-react)",
+      "Bash(npm install react react-dom react-router-dom recharts date-fns lucide-react)",
+      "Bash(npm install -D vite @vitejs/plugin-react typescript @types/react @types/react-dom tailwindcss postcss autoprefixer)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(./node_modules/.bin/tailwindcss init -p)",
+      "Bash(node node_modules/tailwindcss/lib/cli.js init -p)",
+      "Bash(node -e \"const pkg = require\\(''./node_modules/tailwindcss/package.json''\\); console.log\\(pkg.version\\)\")",
+      "Bash(npm install -D tailwindcss@3 postcss autoprefixer)",
+      "Bash(npm install @supabase/supabase-js)",
+      "Bash(node node_modules/vite/bin/vite.js build)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npm)",
+      "Bash(command -v npm)",
+      "Bash(git -C D:/missbo status)",
+      "Bash(git -C D:/missbo log --oneline -5)",
+      "Bash(node -e \"const p=require\\(''D:/missbo/package.json''\\); console.log\\(JSON.stringify\\({name:p.name,version:p.version,scripts:p.scripts},null,2\\)\\)\")",
+      "Bash(ls D:/missbo/.env*)",
+      "Bash(npm run build)",
+      "Bash(gh auth status)",
+      "Bash(gh --version)",
+      "Bash(git init)",
+      "Bash(git add .)"
+    ]
+  }
+}
