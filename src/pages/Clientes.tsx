@@ -20,7 +20,7 @@ const emptyCliente: Omit<Cliente, 'id' | 'createdAt'> = {
   nome: '', telefone: '', email: '', cpf: '',
   dataContato: new Date().toISOString().split('T')[0],
   dataCasamento: '', local: '', endereco: '', distanciaKm: undefined,
-  indicacao: '', status: 'lead', observacoes: '',
+  instagram: '', indicacao: '', status: 'lead', observacoes: '',
 };
 
 export function Clientes() {
@@ -203,9 +203,13 @@ export function Clientes() {
               <label className="label">CPF</label>
               <input className="input-field" placeholder="000.000.000-00" value={form.cpf} onChange={f('cpf')} />
             </div>
-            <div className="col-span-2">
+            <div>
               <label className="label">E-mail</label>
               <input className="input-field" type="email" placeholder="email@exemplo.com" value={form.email} onChange={f('email')} />
+            </div>
+            <div>
+              <label className="label">Instagram</label>
+              <input className="input-field" placeholder="@usuario" value={form.instagram || ''} onChange={f('instagram')} />
             </div>
             <div>
               <label className="label">Data do 1º Contato</label>

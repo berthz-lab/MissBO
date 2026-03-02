@@ -45,6 +45,7 @@ export interface Cliente {
   local?: string;
   endereco?: string;          // endereço completo para navegação
   distanciaKm?: number;       // distância do ateliê até a cliente (km, ida)
+  instagram?: string;         // @ do Instagram da cliente
   indicacao?: string;
   status: 'lead' | 'ativo' | 'concluido' | 'cancelado';
   observacoes?: string;

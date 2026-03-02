@@ -39,6 +39,7 @@ function toCliente(r: Record<string, unknown>): Cliente {
     local: ou(r.local as string),
     endereco: ou(r.endereco as string),
     distanciaKm: num(r.distancia_km),
+    instagram: ou(r.instagram as string),
     indicacao: ou(r.indicacao as string),
     status: r.status as Cliente['status'],
     observacoes: ou(r.observacoes as string),
@@ -51,7 +52,7 @@ function fromCliente(c: Cliente): Record<string, unknown> {
     email: c.email || null, cpf: c.cpf ?? null,
     data_contato: c.dataContato, data_casamento: c.dataCasamento ?? null,
     local: c.local ?? null, endereco: c.endereco ?? null,
-    distancia_km: c.distanciaKm ?? null, indicacao: c.indicacao ?? null,
+    distancia_km: c.distanciaKm ?? null, instagram: c.instagram ?? null, indicacao: c.indicacao ?? null,
     status: c.status, observacoes: c.observacoes ?? null,
     created_at: c.createdAt,
   };

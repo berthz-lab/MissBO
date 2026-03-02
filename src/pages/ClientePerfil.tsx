@@ -4,7 +4,8 @@ import {
   ArrowLeft, Edit2, Phone, Mail, MapPin, Heart, Calendar, Plus, Trash2,
   FileText, Receipt, BarChart3, Image, Ruler, Clock, CheckCircle2,
   Save, X, Printer, Upload, Star, ChevronRight, AlertCircle,
-  Scissors, DollarSign, AlertTriangle, CalendarDays, Navigation, Car, Fuel
+  Scissors, DollarSign, AlertTriangle, CalendarDays, Navigation, Car, Fuel,
+  Instagram,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { genId } from '../utils/storage';
@@ -202,6 +203,18 @@ export function ClientePerfil() {
   const diasCasamento = cliente.dataCasamento
     ? differenceInDays(parseISO(cliente.dataCasamento), new Date())
     : null;
+
+  const hojeStr = new Date().toISOString().split('T')[0];
+  const tiposProvaAg: TipoAgendamento[] = ['primeira_prova', 'segunda_prova', 'prova_final', 'ajuste'];
+  const proximaProva = agendamentos
+    .filter(a => tiposProvaAg.includes(a.tipo) && a.data >= hojeStr && a.status !== 'cancelado' && a.status !== 'concluido')
+    .sort((a, b) => a.data.localeCompare(b.data))[0] ?? null;
+  const diasProxProva = proximaProva
+    ? differenceInDays(parseISO(proximaProva.data), new Date())
+    : null;
+
+  const whatsappUrl = (tel: string) => `https://wa.me/55${tel.replace(/\D/g, '')}`;
+  const proxProvaLabel = proximaProva ? (tiposAg.find(t => t.value === proximaProva.tipo)?.label ?? 'Prova') : '';
 
   const recebido = pagamentos.filter(p => p.status === 'pago').reduce((a, p) => a + p.valor, 0);
   // "A receber" = pagamentos manuais pendentes + parcelas de prova ainda não pagas
@@ -589,37 +602,78 @@ export function ClientePerfil() {
             </button>
           </div>
 
-          <div className="flex flex-wrap items-start gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  {cliente.nome}
-                </h1>
-                <Badge variant={statusOpt?.color || 'gray'}>{statusOpt?.label}</Badge>
-              </div>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-2">
-                <span className="flex items-center gap-1.5"><Phone size={13} />{cliente.telefone}</span>
-                {cliente.email && <span className="flex items-center gap-1.5"><Mail size={13} />{cliente.email}</span>}
-                {cliente.local && <span className="flex items-center gap-1.5"><MapPin size={13} />{cliente.local}</span>}
-                {cliente.dataCasamento && (
-                  <span className="flex items-center gap-1.5">
-                    <Heart size={13} className="text-red-400" />
-                    {fmt(cliente.dataCasamento)}
-                  </span>
+          {/* Nome + badge */}
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
+            <h1 className="text-2xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
+              {cliente.nome}
+            </h1>
+            <Badge variant={statusOpt?.color || 'gray'}>{statusOpt?.label}</Badge>
+          </div>
+
+          {/* Contatos clicáveis */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-gray-500">
+            <a href={whatsappUrl(cliente.telefone)} target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-1.5 hover:text-green-600 transition-colors">
+              <Phone size={13} />{cliente.telefone}
+            </a>
+            {cliente.email && (
+              <a href={`mailto:${cliente.email}`}
+                 className="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+                <Mail size={13} />{cliente.email}
+              </a>
+            )}
+            {cliente.instagram && (
+              <a href={`https://instagram.com/${cliente.instagram.replace('@', '')}`}
+                 target="_blank" rel="noopener noreferrer"
+                 className="flex items-center gap-1.5 hover:text-pink-500 transition-colors">
+                <Instagram size={13} />{cliente.instagram}
+              </a>
+            )}
+            {cliente.local && (
+              <span className="flex items-center gap-1.5"><MapPin size={13} />{cliente.local}</span>
+            )}
+            {cliente.dataCasamento && (
+              <span className="flex items-center gap-1.5">
+                <Heart size={13} className="text-red-400" />{fmt(cliente.dataCasamento)}
+              </span>
+            )}
+          </div>
+
+          {/* Countdown cards — linha própria para não sobrepor */}
+          {(diasCasamento !== null && diasCasamento >= 0) || proximaProva !== null ? (
+            <div className="flex gap-2 mt-3">
+              {diasCasamento !== null && diasCasamento >= 0 && (
+                <div className="flex-1 text-center rounded-2xl border border-gray-200 px-3 py-2.5 bg-gray-50 min-w-0">
+                  <p className="text-2xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    {diasCasamento}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5 leading-tight">dias p/ casamento</p>
+                </div>
+              )}
+              <div className={`flex-1 text-center rounded-2xl border px-3 py-2.5 min-w-0 ${
+                proximaProva
+                  ? 'border-rose-200 bg-rose-50'
+                  : 'border-gray-100 bg-gray-50/60'
+              }`}>
+                {proximaProva ? (
+                  <>
+                    <p className="text-2xl font-bold text-rose-700" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      {diasProxProva === 0 ? '🗓' : diasProxProva}
+                    </p>
+                    <p className="text-xs text-rose-400 mt-0.5 leading-tight">
+                      {diasProxProva === 0 ? `${proxProvaLabel} hoje!` : `dias p/ ${proxProvaLabel}`}
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full py-0.5">
+                    <Calendar size={14} className="text-gray-300 mb-1" />
+                    <p className="text-xs text-gray-400 leading-tight">sem provas</p>
+                    <p className="text-xs text-gray-300 leading-tight">marcadas</p>
+                  </div>
                 )}
               </div>
             </div>
-
-            {/* Countdown */}
-            {diasCasamento !== null && diasCasamento >= 0 && (
-              <div className="text-center rounded-2xl border border-gray-200 px-5 py-3 bg-gray-50">
-                <p className="text-3xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  {diasCasamento}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">dias para o casamento</p>
-              </div>
-            )}
-          </div>
+          ) : null}
 
           {/* Quick KPIs */}
           <div className="grid grid-cols-3 gap-3 mt-5">
@@ -676,8 +730,6 @@ export function ClientePerfil() {
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               { label: 'Nome completo', value: cliente.nome },
-              { label: 'Telefone / WhatsApp', value: cliente.telefone },
-              { label: 'E-mail', value: cliente.email || '—' },
               { label: 'CPF', value: cliente.cpf || '—' },
               { label: 'Data do 1º contato', value: fmt(cliente.dataContato) },
               { label: 'Data do casamento', value: cliente.dataCasamento ? fmt(cliente.dataCasamento) : '—' },
@@ -689,6 +741,35 @@ export function ClientePerfil() {
                 <p className="text-sm font-medium text-brand-charcoal">{value}</p>
               </div>
             ))}
+            {/* Telefone clicável */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Telefone / WhatsApp</p>
+              <a href={whatsappUrl(cliente.telefone)} target="_blank" rel="noopener noreferrer"
+                 className="flex items-center gap-1.5 text-sm font-medium text-green-700 hover:text-green-800 transition-colors">
+                <Phone size={13} />{cliente.telefone}
+              </a>
+            </div>
+            {/* E-mail clicável */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">E-mail</p>
+              {cliente.email ? (
+                <a href={`mailto:${cliente.email}`}
+                   className="flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 transition-colors">
+                  <Mail size={13} />{cliente.email}
+                </a>
+              ) : <p className="text-sm font-medium text-brand-charcoal">—</p>}
+            </div>
+            {/* Instagram clicável */}
+            {cliente.instagram && (
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Instagram</p>
+                <a href={`https://instagram.com/${cliente.instagram.replace('@', '')}`}
+                   target="_blank" rel="noopener noreferrer"
+                   className="flex items-center gap-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 transition-colors">
+                  <Instagram size={13} />{cliente.instagram}
+                </a>
+              </div>
+            )}
             {/* Endereço com navegação */}
             {cliente.endereco && (
               <div className="sm:col-span-2 bg-blue-50 border border-blue-100 rounded-xl p-4">
@@ -1394,8 +1475,9 @@ export function ClientePerfil() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2"><label className="label">Nome *</label><input className="input-field" value={clienteForm.nome || ''} onChange={e => setClienteForm(p => ({ ...p, nome: e.target.value }))}/></div>
-            <div><label className="label">Telefone</label><input className="input-field" value={clienteForm.telefone || ''} onChange={e => setClienteForm(p => ({ ...p, telefone: e.target.value }))}/></div>
+            <div><label className="label">Telefone / WhatsApp</label><input className="input-field" value={clienteForm.telefone || ''} onChange={e => setClienteForm(p => ({ ...p, telefone: e.target.value }))}/></div>
             <div><label className="label">E-mail</label><input type="email" className="input-field" value={clienteForm.email || ''} onChange={e => setClienteForm(p => ({ ...p, email: e.target.value }))}/></div>
+            <div><label className="label">Instagram</label><input className="input-field" placeholder="@usuario" value={clienteForm.instagram || ''} onChange={e => setClienteForm(p => ({ ...p, instagram: e.target.value }))}/></div>
             <div><label className="label">Data do Casamento</label><input type="date" className="input-field" value={clienteForm.dataCasamento || ''} onChange={e => setClienteForm(p => ({ ...p, dataCasamento: e.target.value }))}/></div>
             <div><label className="label">Status</label>
               <select className="input-field" value={clienteForm.status || 'lead'} onChange={e => setClienteForm(p => ({ ...p, status: e.target.value as Cliente['status'] }))}>

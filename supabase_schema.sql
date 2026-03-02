@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS clientes (
 
 ALTER TABLE clientes
   ADD COLUMN IF NOT EXISTS endereco     TEXT,
-  ADD COLUMN IF NOT EXISTS distancia_km NUMERIC(8,2);
+  ADD COLUMN IF NOT EXISTS distancia_km NUMERIC(8,2),
+  ADD COLUMN IF NOT EXISTS instagram    TEXT;
 
 -- ── Medidas da Noiva ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS medidas_noiva (
