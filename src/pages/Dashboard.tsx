@@ -35,14 +35,18 @@ export function Dashboard() {
   const ativas = clientes.filter(c => c.status === 'ativo').length;
   const leads = clientes.filter(c => c.status === 'lead').length;
 
-  const receitaTotal = pagamentos.filter(p => p.status === 'pago').reduce((acc, p) => acc + p.valor, 0);
-  const receitaMes = pagamentos.filter(p => {
+  // Filtra apenas pagamentos cujo cliente ainda existe (evita valores fantasma após deleção)
+  const clienteIds = new Set(clientes.map(c => c.id));
+  const pagsValidos = pagamentos.filter(p => clienteIds.has(p.clienteId));
+
+  const receitaTotal = pagsValidos.filter(p => p.status === 'pago').reduce((acc, p) => acc + p.valor, 0);
+  const receitaMes = pagsValidos.filter(p => {
     if (p.status !== 'pago') return false;
     const d = parseISO(p.data);
     return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
   }).reduce((acc, p) => acc + p.valor, 0);
 
-  const pendentes = pagamentos.filter(p => p.status === 'pendente').reduce((acc, p) => acc + p.valor, 0);
+  const pendentes = pagsValidos.filter(p => p.status === 'pendente').reduce((acc, p) => acc + p.valor, 0);
 
   // Próximos agendamentos (7 dias)
   const proximosAgendamentos = agendamentos
@@ -123,7 +127,7 @@ export function Dashboard() {
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">A Receber</p>
               <p className="text-2xl font-bold text-amber-700 mt-1">{formatMoney(pendentes)}</p>
-              <p className="text-xs text-gray-400 mt-1">{pagamentos.filter(p => p.status === 'pendente').length} pagamentos</p>
+              <p className="text-xs text-gray-400 mt-1">{pagsValidos.filter(p => p.status === 'pendente').length} pagamentos</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
               <Receipt size={20} className="text-amber-600" />

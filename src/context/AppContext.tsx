@@ -124,7 +124,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ─── Clientes ───────────────────────────────────────────────────────────────
   const saveCliente = (c: Cliente) => { clienteStorage.save(c); setClientes(clienteStorage.getAll()); };
-  const deleteCliente = (id: string) => { clienteStorage.delete(id); setClientes(clienteStorage.getAll()); };
+
+  /** Exclui o cliente e todos os dados associados (cascade). */
+  const deleteCliente = (id: string) => {
+    // Contratos → parcelas de prova + pagamentos gerados por prova
+    contratoStorage.getAll()
+      .filter(c => c.clienteId === id)
+      .forEach(c => {
+        parcelaProvaStorage.deleteByContrato(c.id);
+        // Remove pagamentos gerados automaticamente pelas provas (prefixo prov-)
+        pagamentoStorage.getAll()
+          .filter(p => p.id.startsWith(`prov-${c.id}-`))
+          .forEach(p => pagamentoStorage.delete(p.id));
+        contratoStorage.delete(c.id);
+      });
+    // Pagamentos manuais do cliente
+    pagamentoStorage.getAll().filter(p => p.clienteId === id).forEach(p => pagamentoStorage.delete(p.id));
+    // Demais dados do cliente
+    medidasStorage.getAll().filter(m => m.clienteId === id).forEach(m => medidasStorage.delete(m.id));
+    fichaStorage.getAll().filter(f => f.clienteId === id).forEach(f => fichaStorage.delete(f.id));
+    orcamentoStorage.getAll().filter(o => o.clienteId === id).forEach(o => orcamentoStorage.delete(o.id));
+    agendamentoStorage.getAll().filter(a => a.clienteId === id).forEach(a => agendamentoStorage.delete(a.id));
+    inspiracaoStorage.getAll().filter(i => i.clienteId === id).forEach(i => inspiracaoStorage.delete(i.id));
+    // Por fim, o próprio cliente
+    clienteStorage.delete(id);
+    // Recarrega todo o estado de uma vez
+    setClientes(clienteStorage.getAll());
+    setContratos(contratoStorage.getAll());
+    setParcelasProva(parcelaProvaStorage.getAll());
+    setPagamentos(pagamentoStorage.getAll());
+    setMedidas(medidasStorage.getAll());
+    setFichasTecnicas(fichaStorage.getAll());
+    setOrcamentos(orcamentoStorage.getAll());
+    setAgendamentos(agendamentoStorage.getAll());
+    setInspiracoes(inspiracaoStorage.getAll());
+  };
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
   // ─── Medidas ─────────────────────────────────────────────────────────────────
