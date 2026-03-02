@@ -47,9 +47,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.15em' }}>
               MISS<span style={{ color: '#C9A96E' }}>BO</span>
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em' }}>
-              HAUTE COUTURE
-            </p>
           </div>
         </div>
       </div>
