@@ -194,6 +194,21 @@ CREATE TABLE IF NOT EXISTS inspiracoes (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── Configurações do Sistema ──────────────────────────────────
+-- Tabela de linha única (id fixo 'singleton') — sincroniza config entre devices
+CREATE TABLE IF NOT EXISTS config_sistema (
+  id                  TEXT PRIMARY KEY DEFAULT 'singleton',
+  endereco_origem     TEXT NOT NULL DEFAULT '',
+  nome_veiculo        TEXT NOT NULL DEFAULT '',
+  valor_veiculo       NUMERIC(10,2) NOT NULL DEFAULT 0,
+  vida_util_km        NUMERIC(10,1) NOT NULL DEFAULT 150000,
+  consumo_km_l        NUMERIC(5,2) NOT NULL DEFAULT 12,
+  preco_combustivel   NUMERIC(6,3) NOT NULL DEFAULT 6.5,
+  custo_manutencao_km NUMERIC(6,4) NOT NULL DEFAULT 0.1,
+  itens_padrao        JSONB NOT NULL DEFAULT '[]',
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ── Row Level Security (RLS) ───────────────────────────────────
 -- As tabelas ficam acessíveis pela anon key sem RLS.
 -- Para produção segura, habilite o RLS e configure políticas

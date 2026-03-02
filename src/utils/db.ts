@@ -8,7 +8,7 @@ import { genId } from './storage';
 import {
   Cliente, MedidasNoiva, FichaTecnica, Contrato,
   Orcamento, ItemOrcamento, Agendamento, Pagamento,
-  Inspiracao, ParcelaProva,
+  Inspiracao, ParcelaProva, ConfigSistema, ItemPadraoOrcamento, defaultConfig,
 } from '../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -429,6 +429,54 @@ export const inspiracaoDb = {
   },
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase.from('inspiracoes').delete().eq('id', id);
+    if (error) throw error;
+  },
+};
+
+// ── ConfigSistema ─────────────────────────────────────────────────────────────
+function toConfig(r: Record<string, unknown>): ConfigSistema {
+  const itensRaw = (r.itens_padrao ?? []) as Array<Record<string, unknown>>;
+  return {
+    enderecoOrigem: (r.endereco_origem as string) ?? '',
+    nomeVeiculo: (r.nome_veiculo as string) ?? '',
+    valorVeiculo: Number(r.valor_veiculo ?? 0),
+    vidaUtilKm: Number(r.vida_util_km ?? 150000),
+    consumoKmL: Number(r.consumo_km_l ?? 12),
+    precoCombustivel: Number(r.preco_combustivel ?? 6.5),
+    custoManutencaoKm: Number(r.custo_manutencao_km ?? 0.1),
+    itensPadraoOrcamento: itensRaw.map(i => ({
+      id: i.id as string,
+      descricao: i.descricao as string,
+      quantidade: Number(i.quantidade),
+      valorUnitario: Number(i.valorUnitario ?? i.valor_unitario ?? 0),
+    })) as ItemPadraoOrcamento[],
+  };
+}
+function fromConfig(c: ConfigSistema): Record<string, unknown> {
+  return {
+    id: 'singleton',
+    endereco_origem: c.enderecoOrigem,
+    nome_veiculo: c.nomeVeiculo,
+    valor_veiculo: c.valorVeiculo,
+    vida_util_km: c.vidaUtilKm,
+    consumo_km_l: c.consumoKmL,
+    preco_combustivel: c.precoCombustivel,
+    custo_manutencao_km: c.custoManutencaoKm,
+    itens_padrao: c.itensPadraoOrcamento,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export const configDb = {
+  get: async (): Promise<ConfigSistema> => {
+    const { data, error } = await supabase
+      .from('config_sistema').select('*').eq('id', 'singleton').maybeSingle();
+    if (error) throw error;
+    if (!data) return { ...defaultConfig };
+    return toConfig(data as Record<string, unknown>);
+  },
+  save: async (cfg: ConfigSistema): Promise<void> => {
+    const { error } = await supabase.from('config_sistema').upsert(fromConfig(cfg));
     if (error) throw error;
   },
 };

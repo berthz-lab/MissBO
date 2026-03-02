@@ -14,7 +14,7 @@ import {
 import {
   clienteDb, medidasDb, fichaDb, contratoDb,
   orcamentoDb, agendamentoDb, pagamentoDb, inspiracaoDb,
-  parcelaProvaDb, gerarParcelasDb, upsertArr,
+  parcelaProvaDb, gerarParcelasDb, configDb, upsertArr,
 } from '../utils/db';
 import { isSupabaseConfigured } from '../utils/supabase';
 
@@ -104,14 +104,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       if (USE_DB) {
-        const [cls, meds, fichas, conts, orcs, ags, pags, parcelas, insps] = await Promise.all([
+        const [cls, meds, fichas, conts, orcs, ags, pags, parcelas, insps, cfg] = await Promise.all([
           clienteDb.getAll(), medidasDb.getAll(), fichaDb.getAll(),
           contratoDb.getAll(), orcamentoDb.getAll(), agendamentoDb.getAll(),
           pagamentoDb.getAll(), parcelaProvaDb.getAll(), inspiracaoDb.getAll(),
+          configDb.get(),
         ]);
         setClientes(cls); setMedidas(meds); setFichasTecnicas(fichas);
         setContratos(conts); setOrcamentos(orcs); setAgendamentos(ags);
         setPagamentos(pags); setParcelasProva(parcelas); setInspiracoes(insps);
+        setConfig(cfg); configStorage.save(cfg); // mantém localStorage em sincronia
       } else {
         seedDemoData();
         setClientes(clienteStorage.getAll()); setMedidas(medidasStorage.getAll());
@@ -129,7 +131,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { loadAll().catch(console.error); }, [loadAll]);
 
-  const saveConfig = (c: ConfigSistema) => { configStorage.save(c); setConfig(c); };
+  const saveConfig = (c: ConfigSistema) => {
+    configStorage.save(c);
+    setConfig(c);
+    if (USE_DB) bg(() => configDb.save(c));
+  };
   const custoPorKm = calcCustoPorKm(config);
 
   const login = (senha: string): boolean => {
