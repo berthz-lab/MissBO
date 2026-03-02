@@ -1,6 +1,7 @@
 -- ============================================================
 -- SCHEMA DO ATELIÊ DE NOIVAS — Supabase
 -- Execute este arquivo no SQL Editor do seu projeto Supabase
+-- Idempotente: pode ser executado múltiplas vezes sem erro
 -- ============================================================
 
 -- ── Clientes ──────────────────────────────────────────────────
@@ -19,6 +20,10 @@ CREATE TABLE IF NOT EXISTS clientes (
   observacoes TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE clientes
+  ADD COLUMN IF NOT EXISTS endereco     TEXT,
+  ADD COLUMN IF NOT EXISTS distancia_km NUMERIC(8,2);
 
 -- ── Medidas da Noiva ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS medidas_noiva (
@@ -75,24 +80,8 @@ CREATE TABLE IF NOT EXISTS fichas_tecnicas (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ── Contratos ─────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS contratos (
-  id                  TEXT PRIMARY KEY,
-  cliente_id          TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
-  numero              TEXT NOT NULL UNIQUE,
-  data_assinatura     DATE NOT NULL,
-  data_entrega        DATE,
-  valor_total         NUMERIC(10,2) NOT NULL,
-  valor_entrada       NUMERIC(10,2) NOT NULL DEFAULT 0,
-  parcelas_restantes  INT,
-  status              TEXT NOT NULL DEFAULT 'rascunho'
-                        CHECK (status IN ('rascunho','assinado','em_andamento','concluido','cancelado')),
-  descricao_pecas     TEXT,
-  clausulas_especiais TEXT,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- ── Orçamentos ────────────────────────────────────────────────
+-- (declarado antes de contratos para permitir a FK abaixo)
 CREATE TABLE IF NOT EXISTS orcamentos (
   id          TEXT PRIMARY KEY,
   cliente_id  TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
@@ -113,6 +102,30 @@ CREATE TABLE IF NOT EXISTS orcamento_itens (
   quantidade      INT NOT NULL DEFAULT 1,
   valor_unitario  NUMERIC(10,2) NOT NULL DEFAULT 0
 );
+
+-- ── Contratos ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS contratos (
+  id                  TEXT PRIMARY KEY,
+  cliente_id          TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  numero              TEXT NOT NULL UNIQUE,
+  data_assinatura     DATE NOT NULL,
+  data_entrega        DATE,
+  valor_total         NUMERIC(10,2) NOT NULL,
+  valor_entrada       NUMERIC(10,2) NOT NULL DEFAULT 0,
+  parcelas_restantes  INT,
+  status              TEXT NOT NULL DEFAULT 'rascunho'
+                        CHECK (status IN ('rascunho','assinado','em_andamento','concluido','cancelado')),
+  descricao_pecas     TEXT,
+  clausulas_especiais TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE contratos
+  ADD COLUMN IF NOT EXISTS orcamento_id     TEXT REFERENCES orcamentos(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS quantidade_provas INT,
+  ADD COLUMN IF NOT EXISTS anexo_base64     TEXT,
+  ADD COLUMN IF NOT EXISTS anexo_nome       TEXT,
+  ADD COLUMN IF NOT EXISTS anexo_tipo       TEXT;
 
 -- ── Agendamentos ──────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS agendamentos (
@@ -146,6 +159,27 @@ CREATE TABLE IF NOT EXISTS pagamentos (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── Parcelas de Prova ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS parcelas_prova (
+  id              TEXT PRIMARY KEY,
+  contrato_id     TEXT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+  cliente_id      TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  numero          INT NOT NULL,
+  data_prova      DATE,
+  hora_prova      TIME,
+  status_prova    TEXT NOT NULL DEFAULT 'pendente'
+                    CHECK (status_prova IN ('pendente','agendada','realizada','cancelada')),
+  valor_parcela   NUMERIC(10,2) NOT NULL,
+  valor_pago      NUMERIC(10,2),
+  pago            BOOLEAN NOT NULL DEFAULT FALSE,
+  data_pagamento  DATE,
+  forma_pagamento TEXT
+                    CHECK (forma_pagamento IN ('dinheiro','pix','cartao_credito','cartao_debito','transferencia')),
+  observacoes     TEXT,
+  pagamento_id    TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ── Inspirações ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS inspiracoes (
   id            TEXT PRIMARY KEY,
@@ -160,7 +194,10 @@ CREATE TABLE IF NOT EXISTS inspiracoes (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ── Row Level Security (RLS) — habilite conforme sua estratégia de auth
+-- ── Row Level Security (RLS) ───────────────────────────────────
+-- As tabelas ficam acessíveis pela anon key sem RLS.
+-- Para produção segura, habilite o RLS e configure políticas
+-- baseadas em Supabase Auth (ex: auth.uid() por linha).
 -- ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE medidas_noiva ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE fichas_tecnicas ENABLE ROW LEVEL SECURITY;
@@ -169,4 +206,5 @@ CREATE TABLE IF NOT EXISTS inspiracoes (
 -- ALTER TABLE orcamento_itens ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE agendamentos ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE pagamentos ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE parcelas_prova ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE inspiracoes ENABLE ROW LEVEL SECURITY;
