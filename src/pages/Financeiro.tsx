@@ -60,22 +60,33 @@ export function Financeiro() {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
 
+  /* ── Filtra apenas dados de clientes que ainda existem (evita órfãos) ── */
+  const clienteIds = useMemo(() => new Set(clientes.map(c => c.id)), [clientes]);
+  const pagsValidos = useMemo(
+    () => pagamentos.filter(p => clienteIds.has(p.clienteId)),
+    [pagamentos, clienteIds],
+  );
+  const provasValidas = useMemo(
+    () => parcelasProva.filter(p => clienteIds.has(p.clienteId)),
+    [parcelasProva, clienteIds],
+  );
+
   /* ── Pagamentos filtrados pelo período ── */
   const filteredPagamentos = useMemo(() => {
-    return pagamentos.filter(p => {
+    return pagsValidos.filter(p => {
       if (periodo === 'all') return true;
       const d = parseISO(p.data);
       const months = periodo === '1m' ? 1 : periodo === '3m' ? 3 : periodo === '6m' ? 6 : 12;
       const start = startOfMonth(subMonths(today, months - 1));
       return isWithinInterval(d, { start, end: today });
     });
-  }, [pagamentos, periodo]);
+  }, [pagsValidos, periodo]);
 
   /* ── Todas as parcelas de prova pendentes (sem filtro de período)
        "A Receber" é uma obrigação vigente — não faz sentido filtrá-la por data ── */
   const allProvasPend = useMemo(
-    () => parcelasProva.filter(p => !p.pago && p.statusProva !== 'cancelada'),
-    [parcelasProva],
+    () => provasValidas.filter(p => !p.pago && p.statusProva !== 'cancelada'),
+    [provasValidas],
   );
 
   /* ── KPIs ── */
@@ -98,11 +109,11 @@ export function Financeiro() {
       const date = subMonths(today, months - 1 - i);
       const start = startOfMonth(date);
       const end = endOfMonth(date);
-      const pags = pagamentos.filter(p => {
+      const pags = pagsValidos.filter(p => {
         const d = parseISO(p.data);
         return isWithinInterval(d, { start, end });
       });
-      const provasDoMes = parcelasProva.filter(p => {
+      const provasDoMes = provasValidas.filter(p => {
         if (p.pago || p.statusProva === 'cancelada') return false;
         const ds = p.dataProva || p.createdAt.split('T')[0];
         const d = parseISO(ds);
@@ -116,7 +127,7 @@ export function Financeiro() {
           provasDoMes.reduce((a, p) => a + p.valorParcela, 0),
       };
     });
-  }, [pagamentos, parcelasProva, periodo]);
+  }, [pagsValidos, provasValidas, periodo]);
 
   /* ── Gráfico por forma de pagamento ── */
   const porForma = useMemo(() => {
