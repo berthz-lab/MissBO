@@ -142,10 +142,6 @@ export function Login() {
                   : 'Entrar'}
               </button>
             </form>
-
-            <p className="mt-6 text-center text-xs text-gray-400">
-              Senha: <code className="font-mono text-brand-gold">atelie2024</code>
-            </p>
           </div>
         </div>
       </div>
