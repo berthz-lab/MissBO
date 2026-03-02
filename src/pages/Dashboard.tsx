@@ -127,7 +127,7 @@ export function Dashboard() {
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">A Receber</p>
               <p className="text-2xl font-bold text-amber-700 mt-1">{formatMoney(pendentes)}</p>
-              <p className="text-xs text-gray-400 mt-1">{pagsValidos.filter(p => p.status === 'pendente').length} pagamentos</p>
+              <p className="text-xs text-gray-400 mt-1">{pagsValidos.filter(p => p.status === 'Vencido').length} pagamentos</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
               <Receipt size={20} className="text-amber-600" />
