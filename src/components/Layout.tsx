@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Ruler, FileText,
-  Receipt, Calendar, BarChart3, Image, LogOut, Menu, X, ChevronRight, Settings
+  Receipt, Calendar, BarChart3, Image, LogOut, Menu, X, ChevronRight, Settings,
+  AlertCircle, CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -30,9 +31,16 @@ function MissboLogo({ size = 28 }: { size?: number }) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { logout } = useApp();
+  const { logout, toast, clearToast } = useApp();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /* Auto-dismiss toast após 4 segundos */
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(clearToast, 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -123,6 +131,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* Toast global */}
+      {toast && (
+        <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-white text-sm font-medium transition-all animate-fade-in ${
+          toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'
+        }`}>
+          {toast.type === 'error'
+            ? <AlertCircle size={16} className="flex-shrink-0" />
+            : <CheckCircle2 size={16} className="flex-shrink-0" />}
+          <span>{toast.msg}</span>
+          <button onClick={clearToast} className="ml-1 opacity-70 hover:opacity-100 transition-opacity">
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

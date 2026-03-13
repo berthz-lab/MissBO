@@ -25,7 +25,27 @@
       "Bash(gh auth status)",
       "Bash(gh --version)",
       "Bash(git init)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git add .gitattributes)",
+      "Bash(git config user.email \"missbo@atelie.com\")",
+      "Bash(git config user.name \"MissBO Ateliê\")",
+      "Bash(git commit:*)",
+      "Bash(git remote add origin https://github.com/berthz-lab/MissBO.git)",
+      "Bash(git branch -M main)",
+      "Bash(git push -u origin main)",
+      "Bash(git add src/utils/storage.ts src/pages/Configuracoes.tsx)",
+      "Bash(git push origin main)",
+      "Bash(git add src/pages/Configuracoes.tsx)",
+      "Bash(git add src/context/AppContext.tsx src/pages/Dashboard.tsx)",
+      "Bash(git add src/pages/Financeiro.tsx)",
+      "Bash(node node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(git add supabase_schema.sql src/utils/db.ts src/context/AppContext.tsx src/App.tsx)",
+      "Bash(git add supabase_schema.sql src/utils/db.ts src/context/AppContext.tsx)",
+      "Bash(git add src/types/index.ts supabase_schema.sql src/utils/db.ts src/pages/ClientePerfil.tsx src/pages/Clientes.tsx)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(git push)",
+      "Bash(git add src/pages/ClientePerfil.tsx)",
+      "Bash(git add -A)"
     ]
   }
 }

@@ -23,6 +23,8 @@ const USE_DB = isSupabaseConfigured();
 
 interface AppContextType {
   loading: boolean;
+  toast: { msg: string; type: 'error' | 'success' } | null;
+  clearToast: () => void;
   // Config
   config: ConfigSistema;
   saveConfig: (c: ConfigSistema) => void;
@@ -87,6 +89,8 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ msg: string; type: 'error' | 'success' } | null>(null);
+  const clearToast = () => setToast(null);
   const [isLoggedIn, setIsLoggedIn] = useState(authStorage.isLoggedIn());
   const [config, setConfig] = useState<ConfigSistema>(configStorage.get());
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -145,9 +149,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const logout = () => { authStorage.logout(); setIsLoggedIn(false); };
 
   // ── Helpers internos ──────────────────────────────────────────────────────
-  /** Executa operação no Supabase; em caso de erro, recarrega o estado para manter consistência */
+  /** Executa operação no Supabase; em caso de erro, exibe toast e recarrega o estado */
   const bg = (op: () => Promise<void>) => {
-    op().catch(err => { console.error('DB error:', err); loadAll().catch(console.error); });
+    op().catch(err => {
+      console.error('DB error:', err);
+      setToast({ msg: 'Erro ao salvar — verifique sua conexão.', type: 'error' });
+      loadAll().catch(console.error);
+    });
   };
 
   // ── Clientes ─────────────────────────────────────────────────────────────
@@ -392,6 +400,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider value={{
       loading,
+      toast, clearToast,
       config, saveConfig, custoPorKm,
       isLoggedIn, login, logout,
       clientes, saveCliente, deleteCliente, getCliente,

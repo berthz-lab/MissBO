@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fmtMoney, fmtTelefone } from '../utils/format';
 import { Users, Calendar, Receipt, TrendingUp, Heart, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { format, isAfter, isBefore, addDays, parseISO, isToday } from 'date-fns';
@@ -66,7 +67,7 @@ export function Dashboard() {
 
   const fichasEmAndamento = fichasTecnicas.filter(f => f.status !== 'concluida').length;
 
-  const formatMoney = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatMoney = fmtMoney;
 
   return (
     <div>
@@ -254,7 +255,7 @@ export function Dashboard() {
                 {clientes.slice(0, 5).map(c => (
                   <tr key={c.id} className="table-row cursor-pointer" onClick={() => navigate(`/clientes/${c.id}`)}>
                     <td className="table-td font-medium text-gray-900">{c.nome}</td>
-                    <td className="table-td text-gray-500">{c.telefone}</td>
+                    <td className="table-td text-gray-500">{fmtTelefone(c.telefone)}</td>
                     <td className="table-td text-gray-500">
                       {c.dataCasamento
                         ? format(parseISO(c.dataCasamento), "dd/MM/yyyy")

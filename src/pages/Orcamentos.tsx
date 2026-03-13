@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Plus, Search, Trash2, Receipt, Printer, Edit2, X, Car, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Trash2, Receipt, Printer, Edit2, X, Car } from 'lucide-react';
+import { fmtMoney } from '../utils/format';
 import { useApp } from '../context/AppContext';
 import { Orcamento, ItemOrcamento } from '../types';
 import { genId } from '../utils/storage';
@@ -43,6 +44,16 @@ export function Orcamentos() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
+
+  /* B2 — Auto-expirar orçamentos cuja validade já passou */
+  useEffect(() => {
+    const hoje = new Date().toISOString().split('T')[0];
+    orcamentos.forEach(o => {
+      if (o.status === 'pendente' && o.validade && o.validade < hoje) {
+        saveOrcamento({ ...o, status: 'expirado' });
+      }
+    });
+  }, [orcamentos]);
 
   const filtered = orcamentos.filter(o => {
     const cliente = getCliente(o.clienteId);
@@ -150,7 +161,7 @@ export function Orcamentos() {
     setModalOpen(false);
   };
 
-  const formatMoney = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatMoney = fmtMoney;
 
   const handlePrint = (o: Orcamento) => {
     const cliente = getCliente(o.clienteId);

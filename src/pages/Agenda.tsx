@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Plus, Search, Edit2, Trash2, Calendar, Clock, CheckCircle2, Bell,
-  ChevronLeft, ChevronRight, List, Grid,
+  ChevronLeft, ChevronRight, List, Grid, AlertTriangle,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Agendamento, TipoAgendamento } from '../types';
@@ -120,6 +120,19 @@ export function Agenda() {
     });
     setModalOpen(true);
   };
+
+  const hojeStr = today.toISOString().split('T')[0];
+
+  /* U3 — data no passado */
+  const isPastDate = form.data < hojeStr;
+
+  /* U4 — conflito de horário (mesmo dia+hora, outro agendamento não cancelado) */
+  const conflito = agendamentos.find(a =>
+    a.id !== editingAg?.id &&
+    a.data === form.data &&
+    a.hora === form.hora &&
+    a.status !== 'cancelado',
+  );
 
   const handleSave = () => {
     if (!form.clienteId) return;
@@ -562,6 +575,22 @@ export function Agenda() {
               />
             </div>
           </div>
+
+          {/* U3 — aviso data passada */}
+          {isPastDate && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs">
+              <AlertTriangle size={13} className="flex-shrink-0" />
+              A data selecionada já passou. Deseja agendar no passado mesmo assim?
+            </div>
+          )}
+
+          {/* U4 — aviso conflito de horário */}
+          {conflito && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+              <AlertTriangle size={13} className="flex-shrink-0" />
+              Conflito: <strong>{clientes.find(c => c.id === conflito.clienteId)?.nome}</strong> já está agendada neste mesmo horário ({conflito.hora}).
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button onClick={() => setModalOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>

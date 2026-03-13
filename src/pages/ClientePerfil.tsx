@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { genId } from '../utils/storage';
+import { fmtTelefone } from '../utils/format';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import {
@@ -618,7 +619,7 @@ export function ClientePerfil() {
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-gray-500">
             <a href={whatsappUrl(cliente.telefone)} target="_blank" rel="noopener noreferrer"
                className="flex items-center gap-1.5 hover:text-green-600 transition-colors">
-              <Phone size={13} />{cliente.telefone}
+              <Phone size={13} />{fmtTelefone(cliente.telefone)}
             </a>
             {cliente.email && (
               <a href={`mailto:${cliente.email}`}
@@ -682,17 +683,17 @@ export function ClientePerfil() {
           ) : null}
 
           {/* Quick KPIs */}
-          <div className="grid grid-cols-3 gap-3 mt-5">
+          <div className="grid grid-cols-2 gap-2 mt-5">
             <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-brand-black">{fmtMoney(recebido)}</p>
+              <p className="text-base font-bold text-brand-black truncate">{fmtMoney(recebido)}</p>
               <p className="text-xs text-gray-400 mt-0.5">Recebido</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-amber-600">{fmtMoney(pendente)}</p>
+              <p className="text-base font-bold text-amber-600 truncate">{fmtMoney(pendente)}</p>
               <p className="text-xs text-gray-400 mt-0.5">A receber</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-brand-black">{fmtMoney(totalContrato)}</p>
+            <div className="col-span-2 bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-base font-bold text-brand-black">{fmtMoney(totalContrato)}</p>
               <p className="text-xs text-gray-400 mt-0.5">Total contrato</p>
             </div>
           </div>
@@ -1843,7 +1844,23 @@ export function ClientePerfil() {
 
       {/* Delete confirm */}
       <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar exclusão" size="sm">
-        <p className="text-gray-500 mb-6">Deseja excluir este item? Esta ação não pode ser desfeita.</p>
+        {(() => {
+          if (deleteConfirm?.type === 'contrato') {
+            const parcsPagas = parcelasProva.filter(p => p.contratoId === deleteConfirm.id && p.pago);
+            return (
+              <div className="space-y-4 mb-6">
+                <p className="text-gray-500">Deseja excluir este contrato? Esta ação não pode ser desfeita.</p>
+                {parcsPagas.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-xs text-red-700">
+                    <AlertTriangle size={13} className="flex-shrink-0 mt-0.5" />
+                    <span>Este contrato tem <strong>{parcsPagas.length} prova{parcsPagas.length > 1 ? 's' : ''} já pagas</strong> ({fmtMoney(parcsPagas.reduce((a, p) => a + (p.valorPago ?? p.valorParcela), 0))}). O histórico financeiro será perdido.</span>
+                  </div>
+                )}
+              </div>
+            );
+          }
+          return <p className="text-gray-500 mb-6">Deseja excluir este item? Esta ação não pode ser desfeita.</p>;
+        })()}
         <div className="flex gap-3">
           <button onClick={() => setDeleteConfirm(null)} className="btn-secondary flex-1 justify-center">Cancelar</button>
           <button onClick={handleDelete} className="flex-1 inline-flex justify-center items-center px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-all">Excluir</button>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Edit2, Trash2, Scissors } from 'lucide-react';
+import { fmtMoney } from '../utils/format';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
@@ -139,7 +140,7 @@ export function Financeiro() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredPagamentos]);
 
-  const formatMoney = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatMoney = fmtMoney;
 
   const openNew = () => {
     setEditingPag(null);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit2, Trash2, Heart, Phone, Mail, MapPin, Eye } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Heart, Phone, Mail, MapPin, Eye, AlertTriangle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Cliente } from '../types';
 import { genId } from '../utils/storage';
@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { fmtMoney, fmtTelefone } from '../utils/format';
 
 const statusOptions = [
   { value: 'lead', label: 'Lead', color: 'yellow' as const },
@@ -24,7 +25,7 @@ const emptyCliente: Omit<Cliente, 'id' | 'createdAt'> = {
 };
 
 export function Clientes() {
-  const { clientes, saveCliente, deleteCliente } = useApp();
+  const { clientes, saveCliente, deleteCliente, contratos, pagamentos, parcelasProva } = useApp();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -34,8 +35,11 @@ export function Clientes() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const filtered = clientes.filter(c => {
-    const matchSearch = !search || c.nome.toLowerCase().includes(search.toLowerCase())
-      || c.telefone.includes(search) || c.email.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search
+      || c.nome.toLowerCase().includes(search.toLowerCase())
+      || c.telefone.includes(search)
+      || c.email.toLowerCase().includes(search.toLowerCase())
+      || (c.instagram || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || c.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -53,6 +57,7 @@ export function Clientes() {
       dataContato: c.dataContato, dataCasamento: c.dataCasamento || '',
       local: c.local || '', endereco: c.endereco || '',
       distanciaKm: c.distanciaKm, indicacao: c.indicacao || '',
+      instagram: c.instagram || '',
       status: c.status, observacoes: c.observacoes || '',
     });
     setModalOpen(true);
@@ -135,12 +140,12 @@ export function Clientes() {
               <div className="space-y-1.5 text-sm text-gray-500 mb-4">
                 <div className="flex items-center gap-2">
                   <Phone size={13} className="text-gray-400 flex-shrink-0" />
-                  <span>{c.telefone}</span>
+                  <span>{fmtTelefone(c.telefone)}</span>
                 </div>
                 {c.email && (
                   <div className="flex items-center gap-2">
                     <Mail size={13} className="text-gray-400 flex-shrink-0" />
-                    <span className="truncate">{c.email}</span>
+                    <span className="truncate" title={c.email}>{c.email}</span>
                   </div>
                 )}
                 {c.dataCasamento && (
@@ -262,17 +267,42 @@ export function Clientes() {
       </Modal>
 
       {/* Delete Confirm */}
-      <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar exclusão" size="sm">
-        <p className="text-gray-600 mb-6">
-          Tem certeza que deseja excluir esta cliente? Esta ação não pode ser desfeita.
-        </p>
-        <div className="flex gap-3">
-          <button onClick={() => setDeleteConfirm(null)} className="btn-secondary flex-1 justify-center">Cancelar</button>
-          <button onClick={() => handleDelete(deleteConfirm!)} className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-all justify-center inline-flex">
-            Excluir
-          </button>
-        </div>
-      </Modal>
+      {(() => {
+        const cli = clientes.find(c => c.id === deleteConfirm);
+        const contsAtivos = contratos.filter(c => c.clienteId === deleteConfirm && c.status !== 'cancelado');
+        const pagsAberto = pagamentos.filter(p => p.clienteId === deleteConfirm && p.status !== 'pago');
+        const provasAbert = parcelasProva.filter(p => p.clienteId === deleteConfirm && !p.pago && p.statusProva !== 'cancelada');
+        const temDados = contsAtivos.length > 0 || pagsAberto.length > 0 || provasAbert.length > 0;
+        const totalPendente = pagsAberto.reduce((a, p) => a + p.valor, 0) + provasAbert.reduce((a, p) => a + p.valorParcela, 0);
+        return (
+          <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar exclusão" size="sm">
+            <div className="space-y-4 mb-6">
+              <p className="text-gray-600">
+                Tem certeza que deseja excluir <strong>{cli?.nome}</strong>? Esta ação não pode ser desfeita.
+              </p>
+              {temDados && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-1">
+                  <div className="flex items-center gap-2 text-red-700 font-semibold text-sm mb-2">
+                    <AlertTriangle size={15} /> Dados que serão perdidos:
+                  </div>
+                  {contsAtivos.length > 0 && (
+                    <p className="text-xs text-red-600">• {contsAtivos.length} contrato{contsAtivos.length > 1 ? 's' : ''} ativo{contsAtivos.length > 1 ? 's' : ''}</p>
+                  )}
+                  {(pagsAberto.length > 0 || provasAbert.length > 0) && (
+                    <p className="text-xs text-red-600">• {fmtMoney(totalPendente)} a receber ({pagsAberto.length + provasAbert.length} lançamento{pagsAberto.length + provasAbert.length > 1 ? 's' : ''})</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteConfirm(null)} className="btn-secondary flex-1 justify-center">Cancelar</button>
+              <button onClick={() => handleDelete(deleteConfirm!)} className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-all justify-center inline-flex">
+                Excluir mesmo assim
+              </button>
+            </div>
+          </Modal>
+        );
+      })()}
     </div>
   );
 }
