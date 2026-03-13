@@ -25,7 +25,7 @@ const tipoLabels: Record<string, string> = {
 };
 
 export function Dashboard() {
-  const { clientes, agendamentos, pagamentos, fichasTecnicas, contratos } = useApp();
+  const { clientes, agendamentos, pagamentos, parcelasProva, fichasTecnicas, contratos } = useApp();
   const navigate = useNavigate();
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
@@ -36,9 +36,10 @@ export function Dashboard() {
   const ativas = clientes.filter(c => c.status === 'ativo').length;
   const leads = clientes.filter(c => c.status === 'lead').length;
 
-  // Filtra apenas pagamentos cujo cliente ainda existe (evita valores fantasma após deleção)
+  // Filtra apenas dados de clientes que ainda existem (evita valores fantasma após deleção)
   const clienteIds = new Set(clientes.map(c => c.id));
   const pagsValidos = pagamentos.filter(p => clienteIds.has(p.clienteId));
+  const provasValidas = parcelasProva.filter(p => clienteIds.has(p.clienteId));
 
   const receitaTotal = pagsValidos.filter(p => p.status === 'pago').reduce((acc, p) => acc + p.valor, 0);
   const receitaMes = pagsValidos.filter(p => {
@@ -47,7 +48,10 @@ export function Dashboard() {
     return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
   }).reduce((acc, p) => acc + p.valor, 0);
 
-  const pendentes = pagsValidos.filter(p => p.status === 'pendente').reduce((acc, p) => acc + p.valor, 0);
+  // A Receber = pagamentos manuais pendentes + parcelas de prova ainda não pagas (não canceladas)
+  const pendentes =
+    pagsValidos.filter(p => p.status === 'pendente').reduce((acc, p) => acc + p.valor, 0) +
+    provasValidas.filter(p => !p.pago && p.statusProva !== 'cancelada').reduce((acc, p) => acc + p.valorParcela, 0);
 
   // Próximos agendamentos (7 dias)
   const proximosAgendamentos = agendamentos
