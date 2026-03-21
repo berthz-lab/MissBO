@@ -81,7 +81,7 @@ function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
     items.push(mk(`Atendimento — ${quantidadeProvas} prova(s)`, atendimentoPorProva, quantidadeProvas));
   if (assinaturaContrato > 0) items.push(mk('Visita p/ assinatura do contrato', assinaturaContrato));
   if (entrega > 0)            items.push(mk('Visita p/ entrega do vestido', entrega));
-  if (gasolina > 0)           items.push(mk('Deslocamento (gasolina)', gasolina));
+  if (gasolina > 0)           items.push(mk(`Deslocamento — ${quantidadeProvas + 2} visitas (${quantidadeProvas} provas + contrato + entrega)`, gasolina));
   if (lucro > 0)              items.push(mk(`Lucro (${margem}%)`, lucro));
 
   return items;
@@ -110,11 +110,12 @@ export function Orcamentos() {
     });
   }, [orcamentos]);
 
-  /* Calc gasolina */
+  /* Calc gasolina: provas + visita contrato + visita entrega */
   const calcGasolina = (clienteId: string, qtdProvas: number) => {
     const cli = clientes.find(c => c.id === clienteId);
     if (!cli?.distanciaKm || custoPorKm <= 0) return 0;
-    return Math.round(custoPorKm * cli.distanciaKm * 2 * qtdProvas * 100) / 100;
+    const totalVisitas = qtdProvas + 2; // +1 assinatura contrato +1 entrega
+    return Math.round(custoPorKm * cli.distanciaKm * 2 * totalVisitas * 100) / 100;
   };
 
   /* Derived */
@@ -602,7 +603,7 @@ export function Orcamentos() {
                 if (!cli?.distanciaKm || custoPorKm <= 0) return null;
                 return (
                   <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 rounded-xl px-3 py-2 whitespace-nowrap self-end mb-[1px]">
-                    <Car size={12} /> {cli.distanciaKm} km × {n('quantidadeProvas')} prova(s)
+                    <Car size={12} /> {cli.distanciaKm} km × {n('quantidadeProvas') + 2} visitas ({n('quantidadeProvas')} provas + contrato + entrega)
                   </div>
                 );
               })()}
