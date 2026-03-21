@@ -41,13 +41,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-6 pt-10 pb-8 flex flex-col items-center">
-        <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-16 w-auto mb-1" />
+      <div className="px-6 pt-10 pb-8 flex flex-col items-center flex-shrink-0">
+        <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-24 w-auto mb-1" />
         <div className="w-12 h-px mt-3" style={{ background: 'linear-gradient(to right, transparent, #b38779, transparent)' }} />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto min-h-0">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -63,7 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t border-white/5 space-y-0.5">
+      <div className="px-3 py-4 border-t border-white/5 space-y-0.5 flex-shrink-0">
         <button
           onClick={toggleTheme}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/8"
@@ -118,7 +118,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
             <Menu size={20} />
           </button>
-          <img src={isDark ? logoClaro : logoEscuro} alt="Miss Bô Ateliê" className="h-14 w-auto" />
+          <img src={isDark ? logoClaro : logoEscuro} alt="Miss Bô Ateliê" className="h-16 w-auto" />
           <button onClick={toggleTheme}
                   className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
             {isDark ? <Sun size={18} /> : <Moon size={18} />}

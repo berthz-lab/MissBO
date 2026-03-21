@@ -39,7 +39,7 @@ export function Login() {
 
         <div className="relative z-10 text-center">
           <div className="mb-16 flex justify-center">
-            <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-40 w-auto" />
+            <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-52 w-auto" />
           </div>
 
           <div className="space-y-4 text-left max-w-xs mx-auto">
@@ -70,7 +70,7 @@ export function Login() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="lg:hidden text-center mb-10">
-            <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-24 w-auto mx-auto" />
+            <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-32 w-auto mx-auto" />
           </div>
 
           <div className="bg-white rounded-2xl shadow-card p-8 border border-gray-100">

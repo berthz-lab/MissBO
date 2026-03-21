@@ -19,7 +19,7 @@ function LoadingScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F3F0' }}>
       <div className="text-center">
-        <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-28 w-auto mx-auto mb-8 animate-pulse" />
+        <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-36 w-auto mx-auto mb-8 animate-pulse" />
         <div className="flex items-center justify-center gap-1.5">
           {[0, 1, 2].map(i => (
             <div
