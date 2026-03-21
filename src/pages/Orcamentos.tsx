@@ -99,6 +99,7 @@ export function Orcamentos() {
   const [editingOrc,    setEditingOrc]    = useState<Orcamento | null>(null);
   const [form,          setForm]          = useState({ ...EMPTY_FORM });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [arredondar,    setArredondar]    = useState(false);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
@@ -127,10 +128,14 @@ export function Orcamentos() {
   const lucroValor       = Math.round(custoTotal * (n('margemLucro') / 100) * 100) / 100;
   const precoSugerido    = custoTotal + lucroValor;
   const totalFinal       = precoSugerido - n('desconto');
-  const entradaValor     = Math.round(totalFinal * (n('entradaPct') / 100) * 100) / 100;
-  const saldoRestante    = totalFinal - entradaValor;
   const qtdProvas        = n('quantidadeProvas');
-  const valorParcela     = qtdProvas > 0 ? Math.round(saldoRestante / qtdProvas * 100) / 100 : 0;
+  const entradaBase      = Math.round(totalFinal * (n('entradaPct') / 100) * 100) / 100;
+  const saldoBase        = totalFinal - entradaBase;
+  const parcelaBase      = qtdProvas > 0 ? saldoBase / qtdProvas : 0;
+  // Arredondar: parcelas ficam inteiras, diferença vai pra entrada
+  const valorParcela     = arredondar && qtdProvas > 0 ? Math.floor(parcelaBase) : Math.round(parcelaBase * 100) / 100;
+  const saldoRestante    = arredondar && qtdProvas > 0 ? valorParcela * qtdProvas : saldoBase;
+  const entradaValor     = arredondar && qtdProvas > 0 ? totalFinal - saldoRestante : entradaBase;
 
   /* Lista filtrada */
   const filtered = orcamentos.filter(o => {
@@ -695,6 +700,17 @@ export function Orcamentos() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">{qtdProvas}× parcelas (1 por prova)</span>
                   <span className="font-bold text-amber-800">{fmtMoney(valorParcela)}</span>
+                </div>
+                {/* Toggle arredondar */}
+                <div className="border-t border-amber-200 pt-3 flex items-center justify-between">
+                  <label htmlFor="arredondar" className="text-xs text-gray-500 cursor-pointer">
+                    Arredondar parcelas (centavos vão p/ entrada)
+                  </label>
+                  <button id="arredondar" type="button"
+                          onClick={() => setArredondar(prev => !prev)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${arredondar ? 'bg-amber-500' : 'bg-gray-300'}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${arredondar ? 'translate-x-5' : ''}`} />
+                  </button>
                 </div>
               </div>
             </section>
