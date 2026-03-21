@@ -169,6 +169,7 @@ export interface CustosOrcamento {
   entrega: number;
   gasolina: number;
   entradaPct?: number;
+  arredondarParcelas?: boolean;
 }
 
 export interface Orcamento {

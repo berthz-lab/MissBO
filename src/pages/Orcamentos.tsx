@@ -155,6 +155,7 @@ export function Orcamentos() {
     const cid = prefillClienteId || '';
     const gas = cid ? calcGasolina(cid, 1).toString() : '0';
     setForm({ ...EMPTY_FORM, clienteId: cid, gasolina: gas });
+    setArredondar(false);
     setModalOpen(true);
   };
 
@@ -184,6 +185,7 @@ export function Orcamentos() {
         desconto:            o.desconto.toString(),
         entradaPct:          (o.custos.entradaPct ?? 30).toString(),
       });
+      setArredondar(o.custos.arredondarParcelas ?? false);
     } else {
       setForm({ ...EMPTY_FORM, clienteId: o.clienteId, data: o.data,
                 validade: o.validade, status: o.status,
@@ -231,6 +233,7 @@ export function Orcamentos() {
       entrega:             n('entrega'),
       gasolina:            n('gasolina'),
       entradaPct:          n('entradaPct'),
+      arredondarParcelas:  arredondar,
     };
     const itens = buildItens(custos, n('margemLucro'));
     const orc: Orcamento = {
@@ -285,9 +288,14 @@ export function Orcamentos() {
       ].filter(Boolean).join('');
 
       const entradaPctPrint = c.entradaPct ?? 30;
-      const entradaValorPrint = Math.round(final * (entradaPctPrint / 100) * 100) / 100;
-      const saldoPrint = final - entradaValorPrint;
-      const parcelaPrint = c.quantidadeProvas > 0 ? Math.round(saldoPrint / c.quantidadeProvas * 100) / 100 : 0;
+      const entradaBasePrint = Math.round(final * (entradaPctPrint / 100) * 100) / 100;
+      const saldoBasePrint = final - entradaBasePrint;
+      const parcelaBasePrint = c.quantidadeProvas > 0 ? saldoBasePrint / c.quantidadeProvas : 0;
+      // Usa mesma lógica do formulário: se arredondar está ativo, floor nas parcelas
+      const arredondarPrint = c.arredondarParcelas ?? false;
+      const parcelaPrint = arredondarPrint && c.quantidadeProvas > 0 ? Math.floor(parcelaBasePrint) : Math.round(parcelaBasePrint * 100) / 100;
+      const saldoPrint = arredondarPrint && c.quantidadeProvas > 0 ? parcelaPrint * c.quantidadeProvas : saldoBasePrint;
+      const entradaValorPrint = arredondarPrint && c.quantidadeProvas > 0 ? final - saldoPrint : entradaBasePrint;
 
       bodyContent = `
         ${o.titulo || tipoLbl ? `
