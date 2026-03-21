@@ -157,16 +157,33 @@ export interface ItemOrcamento {
   valorUnitario: number;
 }
 
+export interface CustosOrcamento {
+  tecidos: number;
+  aviamentos: number;
+  bordado: number;
+  costura: number;
+  dificuldade: 'facil' | 'medio' | 'dificil' | 'especialista';
+  atendimentoPorProva: number;
+  quantidadeProvas: number;
+  assinaturaContrato: number;
+  entrega: number;
+  gasolina: number;
+}
+
 export interface Orcamento {
   id: string;
   clienteId: string;
   numero: string;
+  titulo?: string;
+  tipoVestido?: string;
   data: string;
   validade: string;
   itens: ItemOrcamento[];
   desconto: number;
   status: 'pendente' | 'aprovado' | 'recusado' | 'expirado';
   observacoes?: string;
+  custos?: CustosOrcamento;
+  margemLucro?: number;
   createdAt: string;
 }
 
