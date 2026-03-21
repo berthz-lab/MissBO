@@ -55,6 +55,7 @@ const EMPTY_FORM = {
   gasolina:            '0',
   margemLucro:         '30',
   desconto:            '0',
+  entradaPct:          '30',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -126,6 +127,10 @@ export function Orcamentos() {
   const lucroValor       = Math.round(custoTotal * (n('margemLucro') / 100) * 100) / 100;
   const precoSugerido    = custoTotal + lucroValor;
   const totalFinal       = precoSugerido - n('desconto');
+  const entradaValor     = Math.round(totalFinal * (n('entradaPct') / 100) * 100) / 100;
+  const saldoRestante    = totalFinal - entradaValor;
+  const qtdProvas        = n('quantidadeProvas');
+  const valorParcela     = qtdProvas > 0 ? Math.round(saldoRestante / qtdProvas * 100) / 100 : 0;
 
   /* Lista filtrada */
   const filtered = orcamentos.filter(o => {
@@ -172,6 +177,7 @@ export function Orcamentos() {
         gasolina:            o.custos.gasolina.toString(),
         margemLucro:         (o.margemLucro ?? 30).toString(),
         desconto:            o.desconto.toString(),
+        entradaPct:          '30',
       });
     } else {
       setForm({ ...EMPTY_FORM, clienteId: o.clienteId, data: o.data,
@@ -644,6 +650,33 @@ export function Orcamentos() {
               </div>
             </div>
           </section>
+
+          {/* ── Simulação de pagamento ── */}
+          {totalFinal > 0 && (
+            <section>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Simulação de pagamento</h3>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Entrada (%)</label>
+                  <input type="number" step="1" min="0" max="100"
+                         className="input-field w-28 text-sm text-right"
+                         value={form.entradaPct} onChange={setF('entradaPct')} />
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Valor da entrada</span>
+                  <span className="font-bold text-amber-800">{fmtMoney(entradaValor)}</span>
+                </div>
+                <div className="border-t border-amber-200 pt-3 flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Saldo restante</span>
+                  <span className="font-semibold text-gray-800">{fmtMoney(saldoRestante)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">{qtdProvas}× parcelas (1 por prova)</span>
+                  <span className="font-bold text-amber-800">{fmtMoney(valorParcela)}</span>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* ── Observações ── */}
           <div>
