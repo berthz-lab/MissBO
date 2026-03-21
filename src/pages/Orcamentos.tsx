@@ -177,7 +177,7 @@ export function Orcamentos() {
         gasolina:            o.custos.gasolina.toString(),
         margemLucro:         (o.margemLucro ?? 30).toString(),
         desconto:            o.desconto.toString(),
-        entradaPct:          '30',
+        entradaPct:          (o.custos.entradaPct ?? 30).toString(),
       });
     } else {
       setForm({ ...EMPTY_FORM, clienteId: o.clienteId, data: o.data,
@@ -225,6 +225,7 @@ export function Orcamentos() {
       assinaturaContrato:  n('assinaturaContrato'),
       entrega:             n('entrega'),
       gasolina:            n('gasolina'),
+      entradaPct:          n('entradaPct'),
     };
     const itens = buildItens(custos, n('margemLucro'));
     const orc: Orcamento = {
@@ -278,6 +279,11 @@ export function Orcamentos() {
         c.gasolina > 0 && `<tr><td>Deslocamento</td><td style="text-align:right;font-weight:500">${fmtMoney(c.gasolina)}</td></tr>`,
       ].filter(Boolean).join('');
 
+      const entradaPctPrint = c.entradaPct ?? 30;
+      const entradaValorPrint = Math.round(final * (entradaPctPrint / 100) * 100) / 100;
+      const saldoPrint = final - entradaValorPrint;
+      const parcelaPrint = c.quantidadeProvas > 0 ? Math.round(saldoPrint / c.quantidadeProvas * 100) / 100 : 0;
+
       bodyContent = `
         ${o.titulo || tipoLbl ? `
         <div style="margin-bottom:20px">
@@ -298,6 +304,21 @@ export function Orcamentos() {
             <tr class="total-row"><td style="color:#C9A96E">VALOR TOTAL</td><td style="text-align:right;color:#C9A96E">${fmtMoney(final)}</td></tr>
           </tbody>
         </table>
+        <div class="payment-box">
+          <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#8A8A8A">Condições de Pagamento</strong>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;padding-bottom:8px;border-bottom:1px solid #E5E5E5">
+            <span>Entrada (${entradaPctPrint}%)</span>
+            <span style="font-weight:600">${fmtMoney(entradaValorPrint)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;padding-bottom:8px;border-bottom:1px solid #E5E5E5">
+            <span>Saldo restante</span>
+            <span style="font-weight:500">${fmtMoney(saldoPrint)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px">
+            <span>${c.quantidadeProvas}× parcelas (1 por prova)</span>
+            <span style="font-weight:600">${fmtMoney(parcelaPrint)}</span>
+          </div>
+        </div>
       `;
     } else {
       bodyContent = `
@@ -353,6 +374,7 @@ export function Orcamentos() {
         .disc-row td{color:#DC2626;font-size:12px;text-align:right;background:#fff;border-bottom:none;padding:4px 12px}
         .total-row{background:#0A0A0A}
         .total-row td{color:#C9A96E;font-weight:700;font-size:16px;border:none;padding:14px 12px}
+        .payment-box{background:#FEF9EF;border:1px solid #E5D9B8;border-radius:8px;padding:16px;margin-top:24px;font-size:13px;color:#1C1C1C;line-height:1.6}
         .obs-box{background:#F5F3F0;border-radius:8px;padding:16px;margin-top:24px;font-size:12px;color:#4A4A4A;line-height:1.6}
         .validity{font-size:12px;color:#4A4A4A;margin-top:20px;padding:12px;border:1px solid #E5E5E5;border-radius:8px;text-align:center}
         .footer{margin-top:40px;padding-top:16px;border-top:1px solid #E5E5E5;font-size:10px;color:#8A8A8A;display:flex;justify-content:space-between;align-items:center}

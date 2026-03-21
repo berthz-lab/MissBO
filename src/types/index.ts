@@ -168,6 +168,7 @@ export interface CustosOrcamento {
   assinaturaContrato: number;
   entrega: number;
   gasolina: number;
+  entradaPct?: number;
 }
 
 export interface Orcamento {
