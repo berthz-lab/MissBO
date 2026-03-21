@@ -283,7 +283,7 @@ export const clienteDb = {
   getAll: async (): Promise<Cliente[]> => {
     const { data, error } = await supabase.from('clientes').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toCliente(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toCliente(r as Record<string, unknown>));
   },
   save: async (item: Cliente): Promise<void> => {
     const { error } = await supabase.from('clientes').upsert(fromCliente(item));
@@ -299,7 +299,7 @@ export const medidasDb = {
   getAll: async (): Promise<MedidasNoiva[]> => {
     const { data, error } = await supabase.from('medidas_noiva').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toMedidas(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toMedidas(r as Record<string, unknown>));
   },
   save: async (item: MedidasNoiva): Promise<void> => {
     const { error } = await supabase.from('medidas_noiva').upsert(fromMedidas(item));
@@ -315,7 +315,7 @@ export const fichaDb = {
   getAll: async (): Promise<FichaTecnica[]> => {
     const { data, error } = await supabase.from('fichas_tecnicas').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toFicha(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toFicha(r as Record<string, unknown>));
   },
   save: async (item: FichaTecnica): Promise<void> => {
     const { error } = await supabase.from('fichas_tecnicas').upsert(fromFicha(item));
@@ -331,7 +331,7 @@ export const contratoDb = {
   getAll: async (): Promise<Contrato[]> => {
     const { data, error } = await supabase.from('contratos').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toContrato(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toContrato(r as Record<string, unknown>));
   },
   save: async (item: Contrato): Promise<void> => {
     const { error } = await supabase.from('contratos').upsert(fromContrato(item));
@@ -350,7 +350,7 @@ export const orcamentoDb = {
       .select('*, itens:orcamento_itens(*)')
       .order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toOrcamento(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toOrcamento(r as Record<string, unknown>));
   },
   save: async (item: Orcamento): Promise<void> => {
     const { itens, ...orc } = item;
@@ -375,7 +375,7 @@ export const agendamentoDb = {
   getAll: async (): Promise<Agendamento[]> => {
     const { data, error } = await supabase.from('agendamentos').select('*').order('data');
     if (error) throw error;
-    return (data ?? []).map(r => toAgendamento(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toAgendamento(r as Record<string, unknown>));
   },
   save: async (item: Agendamento): Promise<void> => {
     const { error } = await supabase.from('agendamentos').upsert(fromAgendamento(item));
@@ -391,7 +391,7 @@ export const pagamentoDb = {
   getAll: async (): Promise<Pagamento[]> => {
     const { data, error } = await supabase.from('pagamentos').select('*').order('data');
     if (error) throw error;
-    return (data ?? []).map(r => toPagamento(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toPagamento(r as Record<string, unknown>));
   },
   save: async (item: Pagamento): Promise<void> => {
     const { error } = await supabase.from('pagamentos').upsert(fromPagamento(item));
@@ -407,13 +407,13 @@ export const parcelaProvaDb = {
   getAll: async (): Promise<ParcelaProva[]> => {
     const { data, error } = await supabase.from('parcelas_prova').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toParcelaProva(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toParcelaProva(r as Record<string, unknown>));
   },
   getByContrato: async (contratoId: string): Promise<ParcelaProva[]> => {
     const { data, error } = await supabase
       .from('parcelas_prova').select('*').eq('contrato_id', contratoId);
     if (error) throw error;
-    return (data ?? []).map(r => toParcelaProva(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toParcelaProva(r as Record<string, unknown>));
   },
   save: async (item: ParcelaProva): Promise<void> => {
     const { error } = await supabase.from('parcelas_prova').upsert(fromParcelaProva(item));
@@ -433,7 +433,7 @@ export const inspiracaoDb = {
   getAll: async (): Promise<Inspiracao[]> => {
     const { data, error } = await supabase.from('inspiracoes').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map(r => toInspiracao(r as Record<string, unknown>));
+    return (data ?? []).map((r: any) => toInspiracao(r as Record<string, unknown>));
   },
   save: async (item: Inspiracao): Promise<void> => {
     const { error } = await supabase.from('inspiracoes').upsert(fromInspiracao(item));

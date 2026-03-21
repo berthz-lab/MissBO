@@ -79,8 +79,8 @@ function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
   if (costura > 0)            items.push(mk('Costura / Mão de obra', costura));
   if (atendimentoPorProva > 0)
     items.push(mk(`Atendimento — ${quantidadeProvas} prova(s)`, atendimentoPorProva, quantidadeProvas));
-  if (assinaturaContrato > 0) items.push(mk('Assinatura do contrato', assinaturaContrato));
-  if (entrega > 0)            items.push(mk('Entrega', entrega));
+  if (assinaturaContrato > 0) items.push(mk('Visita p/ assinatura do contrato', assinaturaContrato));
+  if (entrega > 0)            items.push(mk('Visita p/ entrega do vestido', entrega));
   if (gasolina > 0)           items.push(mk('Deslocamento (gasolina)', gasolina));
   if (lucro > 0)              items.push(mk(`Lucro (${margem}%)`, lucro));
 
@@ -546,7 +546,8 @@ export function Orcamentos() {
 
           {/* ── Atendimento ── */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Atendimento</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Atendimento & Visitas</h3>
+            <p className="text-xs text-gray-400 mb-3">Valor cobrado por cada prova + visitas fixas (ir até a cliente)</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">Valor por prova (R$)</label>
@@ -565,12 +566,12 @@ export function Orcamentos() {
                        onChange={e => handleQtdProvasChange(e.target.value)} />
               </div>
               <div>
-                <label className="label">Assinatura do contrato (R$)</label>
+                <label className="label">Visita p/ assinatura do contrato (R$)</label>
                 <input type="number" step="0.01" min="0" className="input-field"
                        value={form.assinaturaContrato} onChange={setF('assinaturaContrato')} />
               </div>
               <div>
-                <label className="label">Entrega (R$)</label>
+                <label className="label">Visita p/ entrega do vestido (R$)</label>
                 <input type="number" step="0.01" min="0" className="input-field"
                        value={form.entrega} onChange={setF('entrega')} />
               </div>
@@ -579,8 +580,8 @@ export function Orcamentos() {
             <div className="mt-3 flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2.5 text-sm">
               <span className="text-blue-700">
                 Atendimento: {n('atendimentoPorProva') > 0 && `${n('atendimentoPorProva').toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} × ${n('quantidadeProvas')} prova(s)`}
-                {n('assinaturaContrato') > 0 && ` + contrato`}
-                {n('entrega') > 0 && ` + entrega`}
+                {n('assinaturaContrato') > 0 && ` + visita contrato`}
+                {n('entrega') > 0 && ` + visita entrega`}
               </span>
               <span className="font-bold text-blue-800">{fmtMoney(atendimentoTotal)}</span>
             </div>
@@ -588,7 +589,8 @@ export function Orcamentos() {
 
           {/* ── Deslocamento ── */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Deslocamento (gasolina)</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Deslocamento (gasolina)</h3>
+            <p className="text-xs text-gray-400 mb-3">Custo total de ida e volta para todas as provas + visitas</p>
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <label className="label">Total de deslocamento (R$)</label>
