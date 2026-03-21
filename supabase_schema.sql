@@ -229,6 +229,7 @@ CREATE TABLE IF NOT EXISTS config_sistema (
 DO $$
 DECLARE
   tbl TEXT;
+  pol TEXT;
   tbls TEXT[] := ARRAY[
     'clientes','medidas_noiva','fichas_tecnicas','contratos',
     'orcamentos','orcamento_itens','agendamentos','pagamentos',
@@ -236,13 +237,22 @@ DECLARE
   ];
 BEGIN
   FOREACH tbl IN ARRAY tbls LOOP
-    -- Habilita RLS (sem políticas = bloqueio total; com políticas abaixo = acesso liberado)
+    -- Habilita RLS
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', tbl);
 
-    -- Política permissiva para anon e authenticated (acesso total sem autenticação)
+    pol := 'anon_all_' || tbl;
+
+    -- Remove a política se já existir, depois recria (idempotente)
+    IF EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public' AND tablename = tbl AND policyname = pol
+    ) THEN
+      EXECUTE format('DROP POLICY %I ON %I', pol, tbl);
+    END IF;
+
     EXECUTE format(
-      'CREATE POLICY IF NOT EXISTS "anon_all_%s" ON %I FOR ALL TO anon, authenticated USING (true) WITH CHECK (true)',
-      tbl, tbl
+      'CREATE POLICY %I ON %I FOR ALL TO anon, authenticated USING (true) WITH CHECK (true)',
+      pol, tbl
     );
   END LOOP;
 END $$;
