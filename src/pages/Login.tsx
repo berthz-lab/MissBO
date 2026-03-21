@@ -2,17 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-
-function DiamondIcon() {
-  return (
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="24" r="18" stroke="#C9A96E" strokeWidth="1.5" />
-      <circle cx="24" cy="24" r="11" stroke="white"   strokeWidth="1.5" />
-      <path d="M15 24 L24 14 L33 24 L24 34 Z" stroke="white" strokeWidth="1.8" fill="none" />
-      <path d="M15 24 L24 20 L33 24" stroke="white" strokeWidth="1" opacity="0.6" />
-    </svg>
-  );
-}
+import logoClaroCentro from '../assets/logo-claro-centro.png';
+import logoEscuroCentro from '../assets/logo-escuro-centro.png';
 
 export function Login() {
   const { login } = useApp();
@@ -47,16 +38,9 @@ export function Login() {
              style={{ background: 'linear-gradient(to right, transparent, rgba(201,169,110,0.25), transparent)' }} />
 
         <div className="relative z-10 text-center">
-          <div className="mb-8 flex justify-center">
-            <DiamondIcon />
+          <div className="mb-16 flex justify-center">
+            <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-40 w-auto" />
           </div>
-          <h1 className="text-5xl font-bold text-white mb-2"
-              style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.2em' }}>
-            MISS<span style={{ color: '#C9A96E' }}>BO</span>
-          </h1>
-          <p className="text-xs mb-16" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.3em' }}>
-            HAUTE COUTURE
-          </p>
 
           <div className="space-y-4 text-left max-w-xs mx-auto">
             {[
@@ -68,7 +52,7 @@ export function Login() {
               'Dashboard financeiro',
             ].map(item => (
               <div key={item} className="flex items-center gap-3">
-                <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: '#C9A96E' }} />
+                <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: '#b38779' }} />
                 <span className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>{item}</span>
               </div>
             ))}
@@ -86,10 +70,7 @@ export function Login() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="lg:hidden text-center mb-10">
-            <h1 className="text-3xl font-bold" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.18em' }}>
-              MISS<span style={{ color: '#C9A96E' }}>BO</span>
-            </h1>
-            <p className="text-xs mt-1" style={{ color: '#8A8A8A', letterSpacing: '0.25em' }}>HAUTE COUTURE</p>
+            <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-24 w-auto mx-auto" />
           </div>
 
           <div className="bg-white rounded-2xl shadow-card p-8 border border-gray-100">

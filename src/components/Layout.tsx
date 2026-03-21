@@ -3,9 +3,13 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Ruler, FileText,
   Receipt, Calendar, BarChart3, Image, LogOut, Menu, X, ChevronRight, Settings,
-  AlertCircle, CheckCircle2,
+  AlertCircle, CheckCircle2, Moon, Sun,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../hooks/useTheme';
+import logoClaro from '../assets/logo-claro.png';
+import logoClaroCentro from '../assets/logo-claro-centro.png';
+import logoEscuro from '../assets/logo-escuro.png';
 
 const navItems = [
   { to: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard' },
@@ -19,23 +23,13 @@ const navItems = [
   { to: '/configuracoes',  icon: Settings,        label: 'Configurações' },
 ];
 
-// MissBO logo mark — minimal diamond/ring icon
-function MissboLogo({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="10" stroke="#C9A96E" strokeWidth="1.5" />
-      <circle cx="16" cy="16" r="6"  stroke="white"   strokeWidth="1.5" />
-      <path d="M11 16 L16 10 L21 16 L16 22 Z" stroke="white" strokeWidth="1.2" fill="none" />
-    </svg>
-  );
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { logout, toast, clearToast } = useApp();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
-  /* Auto-dismiss toast após 4 segundos */
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(clearToast, 4000);
@@ -46,21 +40,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Brand */}
-      <div className="px-6 pt-8 pb-6 border-b border-white/8">
-        <div className="flex items-center gap-3">
-          <MissboLogo size={32} />
-          <div>
-            <p className="text-xl font-bold tracking-widest text-white leading-none"
-               style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.15em' }}>
-              MISS<span style={{ color: '#C9A96E' }}>BO</span>
-            </p>
-          </div>
-        </div>
+      {/* Logo */}
+      <div className="px-6 pt-10 pb-8 flex flex-col items-center">
+        <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-16 w-auto mb-1" />
+        <div className="w-12 h-px mt-3" style={{ background: 'linear-gradient(to right, transparent, #b38779, transparent)' }} />
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -75,16 +62,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ))}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-white/8">
+      {/* Footer */}
+      <div className="px-3 py-4 border-t border-white/5 space-y-0.5">
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/8"
+          style={{ color: 'rgba(255,255,255,0.45)' }}
+        >
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          <span>{isDark ? 'Modo Claro' : 'Modo Escuro'}</span>
+        </button>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-          style={{ color: 'rgba(255,255,255,0.45)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ef4444'; (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)'; (e.currentTarget as HTMLElement).style.background = ''; }}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+          style={{ color: 'rgba(255,255,255,0.35)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ef4444'; (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLElement).style.background = ''; }}
         >
-          <LogOut size={17} />
+          <LogOut size={16} />
           <span>Sair</span>
         </button>
       </div>
@@ -92,18 +87,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#F5F3F0' }}>
+    <div className={`flex h-screen overflow-hidden transition-colors ${isDark ? 'bg-[#121212]' : 'bg-brand-pearl'}`}>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 flex-shrink-0 shadow-sidebar"
-             style={{ background: '#0A0A0A' }}>
+             style={{ background: '#25282a' }}>
         <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-72 shadow-2xl z-50" style={{ background: '#0A0A0A' }}>
+          <aside className="absolute left-0 top-0 h-full w-72 shadow-2xl z-50" style={{ background: '#25282a' }}>
             <button onClick={() => setSidebarOpen(false)}
                     className="absolute top-4 right-4 p-2 rounded-full text-white/40 hover:text-white transition-colors">
               <X size={20} />
@@ -116,14 +111,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-4 bg-white border-b border-gray-100 shadow-sm">
-          <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+        <header className={`lg:hidden flex items-center justify-between px-4 py-4 border-b shadow-sm transition-colors ${
+          isDark ? 'bg-[#1E1E1E] border-gray-800' : 'bg-white border-brand-silver/20'
+        }`}>
+          <button onClick={() => setSidebarOpen(true)}
+                  className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
             <Menu size={20} />
           </button>
-          <p className="text-sm font-bold tracking-widest" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.15em' }}>
-            MISS<span style={{ color: '#C9A96E' }}>BO</span>
-          </p>
-          <div className="w-9" />
+          <img src={isDark ? logoClaro : logoEscuro} alt="Miss Bô Ateliê" className="h-14 w-auto" />
+          <button onClick={toggleTheme}
+                  className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </header>
 
         {/* Page */}
@@ -132,7 +131,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* Toast global */}
+      {/* Toast */}
       {toast && (
         <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-white text-sm font-medium transition-all animate-fade-in ${
           toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'

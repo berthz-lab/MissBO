@@ -13,20 +13,26 @@ import { Agenda } from './pages/Agenda';
 import { Financeiro } from './pages/Financeiro';
 import { Inspiracoes } from './pages/Inspiracoes';
 import { Configuracoes } from './pages/Configuracoes';
+import logoEscuroCentro from './assets/logo-escuro-centro.png';
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-50 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F3F0' }}>
       <div className="text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-100 flex items-center justify-center animate-pulse">
-          <svg className="w-8 h-8 text-rose-400" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" />
-          </svg>
+        <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-28 w-auto mx-auto mb-8 animate-pulse" />
+        <div className="flex items-center justify-center gap-1.5">
+          {[0, 1, 2].map(i => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                background: '#b38779',
+                animation: 'pulse 1.4s ease-in-out infinite',
+                animationDelay: `${i * 0.2}s`,
+              }}
+            />
+          ))}
         </div>
-        <p className="text-rose-400 text-sm font-medium tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Carregando…
-        </p>
       </div>
     </div>
   );
