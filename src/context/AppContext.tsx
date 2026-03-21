@@ -153,7 +153,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const bg = (op: () => Promise<void>) => {
     op().catch(err => {
       console.error('DB error:', err);
-      setToast({ msg: 'Erro ao salvar — verifique sua conexão.', type: 'error' });
+      // Extrai mensagem legível do erro do Supabase
+      const detail = err?.message || err?.details || err?.hint || '';
+      const isPermission = detail.toLowerCase().includes('permission') ||
+                           detail.toLowerCase().includes('policy') ||
+                           detail.toLowerCase().includes('rls') ||
+                           err?.code === '42501';
+      const msg = isPermission
+        ? 'Sem permissão no banco de dados — execute o schema SQL no Supabase.'
+        : `Erro ao salvar: ${detail || 'verifique sua conexão.'}`;
+      setToast({ msg, type: 'error' });
       loadAll().catch(console.error);
     });
   };

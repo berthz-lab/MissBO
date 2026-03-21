@@ -87,14 +87,25 @@ CREATE TABLE IF NOT EXISTS orcamentos (
   id          TEXT PRIMARY KEY,
   cliente_id  TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
   numero      TEXT NOT NULL UNIQUE,
+  titulo      TEXT,
+  tipo_vestido TEXT,
   data        DATE NOT NULL,
   validade    DATE,
   desconto    NUMERIC(10,2) NOT NULL DEFAULT 0,
   status      TEXT NOT NULL DEFAULT 'pendente'
                 CHECK (status IN ('pendente','aprovado','recusado','expirado')),
   observacoes TEXT,
+  custos      JSONB,
+  margem_lucro NUMERIC(5,2),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Colunas adicionadas após criação inicial (idempotente)
+ALTER TABLE orcamentos
+  ADD COLUMN IF NOT EXISTS titulo       TEXT,
+  ADD COLUMN IF NOT EXISTS tipo_vestido TEXT,
+  ADD COLUMN IF NOT EXISTS custos       JSONB,
+  ADD COLUMN IF NOT EXISTS margem_lucro NUMERIC(5,2);
 
 CREATE TABLE IF NOT EXISTS orcamento_itens (
   id              TEXT PRIMARY KEY,
@@ -210,17 +221,33 @@ CREATE TABLE IF NOT EXISTS config_sistema (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── Permissões para a anon key ────────────────────────────────
+-- Garante que o Supabase anon key possa ler e gravar em todas as tabelas.
+-- Se as tabelas tiverem RLS habilitado, as políticas abaixo liberam o acesso.
+-- Execute este bloco se o cadastro/leitura de dados falhar com erro de permissão.
+
+DO $$
+DECLARE
+  tbl TEXT;
+  tbls TEXT[] := ARRAY[
+    'clientes','medidas_noiva','fichas_tecnicas','contratos',
+    'orcamentos','orcamento_itens','agendamentos','pagamentos',
+    'parcelas_prova','inspiracoes','config_sistema'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tbls LOOP
+    -- Habilita RLS (sem políticas = bloqueio total; com políticas abaixo = acesso liberado)
+    EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', tbl);
+
+    -- Política permissiva para anon e authenticated (acesso total sem autenticação)
+    EXECUTE format(
+      'CREATE POLICY IF NOT EXISTS "anon_all_%s" ON %I FOR ALL TO anon, authenticated USING (true) WITH CHECK (true)',
+      tbl, tbl
+    );
+  END LOOP;
+END $$;
+
 -- ── Row Level Security (RLS) ───────────────────────────────────
--- As tabelas ficam acessíveis pela anon key sem RLS.
--- Para produção segura, habilite o RLS e configure políticas
--- baseadas em Supabase Auth (ex: auth.uid() por linha).
--- ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE medidas_noiva ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE fichas_tecnicas ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE contratos ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE orcamentos ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE orcamento_itens ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE agendamentos ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE pagamentos ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE parcelas_prova ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE inspiracoes ENABLE ROW LEVEL SECURITY;
+-- As políticas acima já habilitam RLS e criam acesso permissivo.
+-- Para produção com autenticação por usuário, substitua as políticas
+-- acima por políticas baseadas em auth.uid().

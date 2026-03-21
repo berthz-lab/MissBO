@@ -161,17 +161,28 @@ function toOrcamento(r: Record<string, unknown>): Orcamento {
   const itensRaw = r.itens as Record<string, unknown>[] | null;
   return {
     id: r.id as string, clienteId: r.cliente_id as string,
-    numero: r.numero as string, data: r.data as string,
+    numero: r.numero as string,
+    titulo: ou(r.titulo as string),
+    tipoVestido: ou(r.tipo_vestido as string),
+    data: r.data as string,
     validade: (r.validade as string) ?? '', itens: (itensRaw ?? []).map(toItemOrcamento),
     desconto: Number(r.desconto ?? 0), status: r.status as Orcamento['status'],
-    observacoes: ou(r.observacoes as string), createdAt: r.created_at as string,
+    observacoes: ou(r.observacoes as string),
+    custos: r.custos ? (r.custos as Orcamento['custos']) : undefined,
+    margemLucro: num(r.margem_lucro),
+    createdAt: r.created_at as string,
   };
 }
 function fromOrcamento(o: Omit<Orcamento, 'itens'>): Record<string, unknown> {
   return {
     id: o.id, cliente_id: o.clienteId, numero: o.numero,
+    titulo: o.titulo ?? null,
+    tipo_vestido: o.tipoVestido ?? null,
     data: o.data, validade: o.validade || null, desconto: o.desconto,
-    status: o.status, observacoes: o.observacoes ?? null, created_at: o.createdAt,
+    status: o.status, observacoes: o.observacoes ?? null,
+    custos: o.custos ? JSON.stringify(o.custos) : null,
+    margem_lucro: o.margemLucro ?? null,
+    created_at: o.createdAt,
   };
 }
 function fromItemOrcamento(orcamentoId: string, i: ItemOrcamento): Record<string, unknown> {
