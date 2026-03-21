@@ -10,6 +10,7 @@ import {
   orcamentoDb, agendamentoDb, pagamentoDb, inspiracaoDb,
   parcelaProvaDb, gerarParcelasDb, configDb, upsertArr,
 } from '../utils/db';
+import { isSupabaseConfigured } from '../utils/supabase';
 
 interface AppContextType {
   loading: boolean;
@@ -97,6 +98,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env');
+        setLoading(false);
+        return;
+      }
       const [cls, meds, fichas, conts, orcs, ags, pags, parcelas, insps, cfg] = await Promise.all([
         clienteDb.getAll(), medidasDb.getAll(), fichaDb.getAll(),
         contratoDb.getAll(), orcamentoDb.getAll(), agendamentoDb.getAll(),
