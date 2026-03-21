@@ -45,7 +45,13 @@
       "Bash(npx tsc --noEmit)",
       "Bash(git push)",
       "Bash(git add src/pages/ClientePerfil.tsx)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(git pull --rebase origin main)",
+      "Bash(git stash)",
+      "Bash(git stash pop)",
+      "Bash(git add src/pages/Dashboard.tsx)",
+      "Bash(grep -E \"\\(src/|\\\\.json$\\)\")",
+      "Bash(wc -l /d/missbo/src/pages/*.tsx)"
     ]
   }
 }

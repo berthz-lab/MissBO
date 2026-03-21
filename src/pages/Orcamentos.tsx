@@ -498,7 +498,16 @@ export function Orcamentos() {
 
       {/* Modal Formulário */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-             title={editingOrc ? 'Editar Orçamento' : 'Novo Orçamento'} size="2xl">
+             title={editingOrc ? 'Editar Orçamento' : 'Novo Orçamento'} size="2xl"
+             footer={
+               <div className="flex gap-3">
+                 <button onClick={() => setModalOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>
+                 <button onClick={handleSave} className="btn-primary flex-1 justify-center"
+                         disabled={!form.clienteId}>
+                   {editingOrc ? 'Salvar Alterações' : 'Criar Orçamento'}
+                 </button>
+               </div>
+             }>
         <div className="space-y-6">
 
           {/* ── Informações gerais ── */}
@@ -732,13 +741,6 @@ export function Orcamentos() {
                       value={form.observacoes} onChange={setF('observacoes')} />
           </div>
 
-          <div className="flex gap-3 pt-1">
-            <button onClick={() => setModalOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>
-            <button onClick={handleSave} className="btn-primary flex-1 justify-center"
-                    disabled={!form.clienteId}>
-              {editingOrc ? 'Salvar Alterações' : 'Criar Orçamento'}
-            </button>
-          </div>
         </div>
       </Modal>
 

@@ -267,7 +267,59 @@ export function Contratos() {
         />
       </div>
 
-      <div className="card p-0 overflow-hidden">
+      {/* Mobile: cards */}
+      <div className="sm:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <FileText size={32} className="mx-auto mb-2 opacity-30" />
+            <p>Nenhum contrato cadastrado</p>
+          </div>
+        ) : filtered.map(c => {
+          const cliente = getCliente(c.clienteId);
+          const statusOpt = statusContrato.find(s => s.value === c.status);
+          return (
+            <div key={c.id} className="card">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="text-xs font-mono text-gray-400">{c.numero}</p>
+                  <p className="font-semibold text-gray-900">{cliente?.nome || '—'}</p>
+                </div>
+                <Badge variant={statusOpt?.color || 'gray'}>{statusOpt?.label}</Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
+                <p className="text-gray-500">Assinatura: {c.dataAssinatura ? format(parseISO(c.dataAssinatura), 'dd/MM/yyyy') : '—'}</p>
+                <p className="text-gray-500">Entrega: {c.dataEntrega ? format(parseISO(c.dataEntrega), 'dd/MM/yyyy') : '—'}</p>
+                <p className="font-semibold text-emerald-700">Total: {formatMoney(c.valorTotal)}</p>
+                <p className="text-gray-500">Entrada: {formatMoney(c.valorEntrada)}</p>
+              </div>
+              {c.anexoNome && (
+                <button onClick={() => openAnexo(c)}
+                        className="flex items-center gap-1 text-xs text-brand-gold hover:underline font-medium mb-3">
+                  <Paperclip size={12} />
+                  <span className="truncate">{c.anexoNome}</span>
+                </button>
+              )}
+              <div className="flex gap-2 border-t border-gray-100 pt-3">
+                <button onClick={() => handlePrint(c)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50">
+                  <Printer size={14} /> Imprimir
+                </button>
+                <button onClick={() => openEdit(c)}
+                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700">
+                  <Edit2 size={14} />
+                </button>
+                <button onClick={() => setDeleteConfirm(c.id)}
+                        className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden sm:block card p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

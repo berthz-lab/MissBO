@@ -245,7 +245,9 @@ export function Dashboard() {
               Ver todos →
             </button>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Desktop: tabela */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr>
@@ -276,6 +278,30 @@ export function Dashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {clientes.slice(0, 5).map(c => (
+              <div key={c.id}
+                   className="p-3 rounded-xl border border-gray-100 bg-gray-50 cursor-pointer hover:border-rose-200 transition-colors"
+                   onClick={() => navigate(`/clientes/${c.id}`)}>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="font-semibold text-sm text-gray-900">{c.nome}</p>
+                  <Badge variant={statusColors[c.status] || 'gray'}>
+                    {c.status === 'lead' ? 'Lead' :
+                      c.status === 'ativo' ? 'Ativo' :
+                        c.status === 'concluido' ? 'Concluído' : 'Cancelado'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-500">{fmtTelefone(c.telefone)}</p>
+                {c.dataCasamento && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Casamento: {format(parseISO(c.dataCasamento), "dd/MM/yyyy")}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
