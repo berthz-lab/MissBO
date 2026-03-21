@@ -90,11 +90,11 @@ export function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Clientes</p>
-              <p className="text-3xl font-bold text-rose-900 mt-1">{totalClientes}</p>
+              <p className="text-3xl font-bold text-brand-black dark:text-gray-100 mt-1">{totalClientes}</p>
               <p className="text-xs text-gray-400 mt-1">{ativas} ativas · {leads} leads</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
-              <Users size={20} className="text-rose-600" />
+            <div className="w-10 h-10 rounded-xl bg-brand-gold/15 flex items-center justify-center">
+              <Users size={20} className="text-brand-gold" />
             </div>
           </div>
         </div>
@@ -103,7 +103,7 @@ export function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Provas Hoje</p>
-              <p className="text-3xl font-bold text-rose-900 mt-1">
+              <p className="text-3xl font-bold text-brand-black dark:text-gray-100 mt-1">
                 {agendamentos.filter(a => isToday(parseISO(a.data)) && a.status !== 'cancelado').length}
               </p>
               <p className="text-xs text-gray-400 mt-1">{fichasEmAndamento} peças em andamento</p>
@@ -118,7 +118,7 @@ export function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Receita do Mês</p>
-              <p className="text-2xl font-bold text-rose-900 mt-1">{formatMoney(receitaMes)}</p>
+              <p className="text-2xl font-bold text-brand-black dark:text-gray-100 mt-1">{formatMoney(receitaMes)}</p>
               <p className="text-xs text-gray-400 mt-1">Total: {formatMoney(receitaTotal)}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -145,10 +145,10 @@ export function Dashboard() {
         {/* Próximos agendamentos */}
         <div className="card">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-rose-900 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h2 className="font-bold text-brand-black dark:text-gray-100 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
               Próximas Provas & Eventos
             </h2>
-            <button onClick={() => navigate('/agenda')} className="text-xs text-rose-600 hover:text-rose-800 font-medium">
+            <button onClick={() => navigate('/agenda')} className="text-xs text-brand-gold hover:text-brand-gold-d font-medium">
               Ver agenda →
             </button>
           </div>
@@ -164,8 +164,8 @@ export function Dashboard() {
                 const d = parseISO(ag.data);
                 const isHoje = isToday(d);
                 return (
-                  <div key={ag.id} className={`flex items-center gap-4 p-3 rounded-xl border ${isHoje ? 'border-rose-200 bg-rose-50' : 'border-gray-100 bg-gray-50'}`}>
-                    <div className={`text-center min-w-[48px] ${isHoje ? 'text-rose-700' : 'text-gray-600'}`}>
+                  <div key={ag.id} className={`flex items-center gap-4 p-3 rounded-xl border ${isHoje ? 'border-brand-gold/30 bg-brand-gold/10' : 'border-gray-100 bg-gray-50'}`}>
+                    <div className={`text-center min-w-[48px] ${isHoje ? 'text-brand-gold' : 'text-gray-600'}`}>
                       <p className="text-xs font-semibold uppercase">
                         {format(d, 'EEE', { locale: ptBR })}
                       </p>
@@ -179,7 +179,7 @@ export function Dashboard() {
                       <p className="text-xs text-gray-500">{tipoLabels[ag.tipo]}</p>
                     </div>
                     {isHoje && (
-                      <span className="flex-shrink-0 text-xs bg-rose-600 text-white px-2 py-0.5 rounded-full font-medium">
+                      <span className="flex-shrink-0 text-xs bg-brand-gold text-white px-2 py-0.5 rounded-full font-medium">
                         Hoje
                       </span>
                     )}
@@ -193,10 +193,10 @@ export function Dashboard() {
         {/* Casamentos próximos */}
         <div className="card">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-rose-900 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h2 className="font-bold text-brand-black dark:text-gray-100 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
               Casamentos Próximos
             </h2>
-            <button onClick={() => navigate('/clientes')} className="text-xs text-rose-600 hover:text-rose-800 font-medium">
+            <button onClick={() => navigate('/clientes')} className="text-xs text-brand-gold hover:text-brand-gold-d font-medium">
               Ver clientes →
             </button>
           </div>
@@ -213,10 +213,10 @@ export function Dashboard() {
                 );
                 const urgente = diasRestantes <= 30;
                 return (
-                  <div key={c.id} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 hover:border-rose-200 transition-colors cursor-pointer"
+                  <div key={c.id} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 hover:border-brand-gold/30 transition-colors cursor-pointer"
                     onClick={() => navigate(`/clientes/${c.id}`)}>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${urgente ? 'bg-red-100' : 'bg-rose-100'}`}>
-                      <Heart size={20} className={urgente ? 'text-red-600' : 'text-rose-600'} />
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${urgente ? 'bg-red-100' : 'bg-brand-gold/15'}`}>
+                      <Heart size={20} className={urgente ? 'text-red-600' : 'text-brand-gold'} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-gray-800">{c.nome}</p>
@@ -224,7 +224,7 @@ export function Dashboard() {
                         {format(parseISO(c.dataCasamento!), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
                       </p>
                     </div>
-                    <div className={`text-right flex-shrink-0 ${urgente ? 'text-red-700' : 'text-rose-700'}`}>
+                    <div className={`text-right flex-shrink-0 ${urgente ? 'text-red-700' : 'text-brand-gold'}`}>
                       <p className="text-2xl font-bold leading-tight">{diasRestantes}</p>
                       <p className="text-xs">dias</p>
                     </div>
@@ -238,10 +238,10 @@ export function Dashboard() {
         {/* Clientes recentes */}
         <div className="card lg:col-span-2">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-rose-900 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h2 className="font-bold text-brand-black dark:text-gray-100 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
               Clientes Recentes
             </h2>
-            <button onClick={() => navigate('/clientes')} className="text-xs text-rose-600 hover:text-rose-800 font-medium">
+            <button onClick={() => navigate('/clientes')} className="text-xs text-brand-gold hover:text-brand-gold-d font-medium">
               Ver todos →
             </button>
           </div>
@@ -284,7 +284,7 @@ export function Dashboard() {
           <div className="sm:hidden space-y-3">
             {clientes.slice(0, 5).map(c => (
               <div key={c.id}
-                   className="p-3 rounded-xl border border-gray-100 bg-gray-50 cursor-pointer hover:border-rose-200 transition-colors"
+                   className="p-3 rounded-xl border border-gray-100 bg-gray-50 cursor-pointer hover:border-brand-gold/30 transition-colors"
                    onClick={() => navigate(`/clientes/${c.id}`)}>
                 <div className="flex items-center justify-between mb-1">
                   <p className="font-semibold text-sm text-gray-900">{c.nome}</p>

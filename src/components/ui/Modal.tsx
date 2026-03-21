@@ -19,6 +19,8 @@ const sizeClasses = {
 };
 
 export function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
+  const isDark = document.documentElement.classList.contains('dark');
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -33,14 +35,21 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', footer }:
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full ${sizeClasses[size]} bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[100dvh] sm:max-h-[90vh] flex flex-col`}>
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-rose-100 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-rose-900" style={{ fontFamily: "'Playfair Display', serif" }}>
+      <div className={`relative w-full ${sizeClasses[size]} sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[100dvh] sm:max-h-[90vh] flex flex-col ${
+        isDark ? 'bg-[#1E1E1E]' : 'bg-white'
+      }`}>
+        <div className={`flex items-center justify-between p-4 sm:p-6 border-b flex-shrink-0 ${
+          isDark ? 'border-gray-700' : 'border-brand-silver/30'
+        }`}>
+          <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-brand-black'}`}
+              style={{ fontFamily: "'Playfair Display', serif" }}>
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-rose-50 text-rose-400 hover:text-rose-600 transition-colors"
+            className={`p-2 rounded-full transition-colors ${
+              isDark ? 'hover:bg-white/10 text-gray-400 hover:text-gray-200' : 'hover:bg-brand-pearl text-brand-silver hover:text-brand-smoke'
+            }`}
           >
             <X size={18} />
           </button>
@@ -49,7 +58,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', footer }:
           {children}
         </div>
         {footer && (
-          <div className="flex-shrink-0 border-t border-rose-100 p-4 sm:p-6 bg-white sm:rounded-b-2xl">
+          <div className={`flex-shrink-0 border-t p-4 sm:p-6 sm:rounded-b-2xl ${
+            isDark ? 'border-gray-700 bg-[#1E1E1E]' : 'border-brand-silver/30 bg-white'
+          }`}>
             {footer}
           </div>
         )}

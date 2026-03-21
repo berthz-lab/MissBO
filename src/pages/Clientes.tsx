@@ -150,7 +150,7 @@ export function Clientes() {
                 )}
                 {c.dataCasamento && (
                   <div className="flex items-center gap-2">
-                    <Heart size={13} className="text-rose-400 flex-shrink-0" />
+                    <Heart size={13} className="text-brand-silver flex-shrink-0" />
                     <span>{format(parseISO(c.dataCasamento), "dd/MM/yyyy")}</span>
                   </div>
                 )}
@@ -171,7 +171,7 @@ export function Clientes() {
                 </button>
                 <button
                   onClick={() => openEdit(c)}
-                  className="p-2 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors"
+                  className="p-2 rounded-lg hover:bg-brand-gold/10 text-gray-400 hover:text-brand-gold transition-colors"
                 >
                   <Edit2 size={14} />
                 </button>

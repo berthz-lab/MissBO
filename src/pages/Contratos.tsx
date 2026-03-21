@@ -159,7 +159,7 @@ export function Contratos() {
         body{font-family:'Inter',sans-serif;color:#1C1C1C;background:#fff;padding:48px;max-width:800px;margin:0 auto;font-size:13px}
         .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:2px solid #0A0A0A;margin-bottom:32px}
         .brand{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;letter-spacing:.15em}
-        .brand span{color:#C9A96E}
+        .brand span{color:#b38779}
         .brand-sub{font-size:9px;letter-spacing:.3em;color:#8A8A8A;margin-top:2px}
         .doc-title{text-align:right}
         .doc-title h2{font-size:18px;font-weight:600;letter-spacing:.05em}
@@ -175,7 +175,7 @@ export function Contratos() {
         tbody tr:nth-child(even){background:#F9F9F9}
         tbody td{padding:10px 12px;font-size:13px;color:#1C1C1C;border-bottom:1px solid #F0F0F0}
         .total-row{background:#0A0A0A}
-        .total-row td{color:#C9A96E;font-weight:700;font-size:15px;border:none}
+        .total-row td{color:#b38779;font-weight:700;font-size:15px;border:none}
         .obs-box{background:#F5F3F0;border-radius:8px;padding:16px;margin-top:8px;font-size:12px;color:#4A4A4A;line-height:1.6}
         .signatures{display:flex;justify-content:space-between;margin-top:64px;gap:40px}
         .sign-line{flex:1;text-align:center}
@@ -221,7 +221,7 @@ export function Contratos() {
             <tr><td>Entrada Paga</td><td style="text-align:right">${formatMoney(c.valorEntrada)}</td></tr>
             <tr><td>Saldo Restante</td><td style="text-align:right">${formatMoney(c.valorTotal - c.valorEntrada)}</td></tr>
             ${c.parcelasRestantes ? `<tr><td>Parcelas Restantes</td><td style="text-align:right">${c.parcelasRestantes}x de ${formatMoney((c.valorTotal - c.valorEntrada) / c.parcelasRestantes)}</td></tr>` : ''}
-            <tr class="total-row"><td style="color:#C9A96E">TOTAL DO CONTRATO</td><td style="text-align:right;color:#C9A96E">${formatMoney(c.valorTotal)}</td></tr>
+            <tr class="total-row"><td style="color:#b38779">TOTAL DO CONTRATO</td><td style="text-align:right;color:#b38779">${formatMoney(c.valorTotal)}</td></tr>
           </tbody>
         </table>
       </div>

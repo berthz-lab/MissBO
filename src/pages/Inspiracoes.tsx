@@ -120,7 +120,7 @@ export function Inspiracoes() {
           return (
             <div key={c.id} className="card p-0 overflow-hidden">
               <div
-                className="flex items-center justify-between p-5 cursor-pointer hover:bg-rose-50/50 transition-colors"
+                className="flex items-center justify-between p-5 cursor-pointer hover:bg-brand-gold/10/50 transition-colors"
                 onClick={() => setExpanded(isExpanded ? null : c.id)}
               >
                 <div className="flex items-center gap-3">
@@ -148,7 +148,7 @@ export function Inspiracoes() {
               </div>
 
               {isExpanded && (
-                <div className="border-t border-rose-100 p-5">
+                <div className="border-t border-brand-silver/30 p-5">
                   {clienteInsps.length === 0 ? (
                     <div className="text-center py-10 text-gray-400">
                       <Image size={40} className="mx-auto mb-3 opacity-30" />
@@ -193,7 +193,7 @@ export function Inspiracoes() {
                               <div className="flex flex-col gap-1 flex-shrink-0">
                                 <button
                                   onClick={() => toggleFavorito(insp)}
-                                  className={`p-1 rounded ${insp.favorito ? 'text-rose-500' : 'text-gray-300 hover:text-rose-400'} transition-colors`}
+                                  className={`p-1 rounded ${insp.favorito ? 'text-brand-gold' : 'text-gray-300 hover:text-brand-silver'} transition-colors`}
                                 >
                                   <Heart size={13} fill={insp.favorito ? 'currentColor' : 'none'} />
                                 </button>
@@ -237,7 +237,7 @@ export function Inspiracoes() {
           <div>
             <label className="label">Imagem</label>
             <div
-              className="border-2 border-dashed border-rose-200 rounded-xl p-6 text-center cursor-pointer hover:border-rose-400 hover:bg-rose-50 transition-all"
+              className="border-2 border-dashed border-brand-gold/30 rounded-xl p-6 text-center cursor-pointer hover:border-rose-400 hover:bg-brand-gold/10 transition-all"
               onClick={() => fileInputRef.current?.click()}
             >
               {imagePreview ? (
@@ -248,7 +248,7 @@ export function Inspiracoes() {
               ) : (
                 <div>
                   <Upload size={28} className="mx-auto mb-2 text-rose-300" />
-                  <p className="text-sm text-rose-600 font-medium">Clique para enviar foto</p>
+                  <p className="text-sm text-brand-gold font-medium">Clique para enviar foto</p>
                   <p className="text-xs text-gray-400 mt-1">PNG, JPG até 5MB</p>
                 </div>
               )}
@@ -268,12 +268,12 @@ export function Inspiracoes() {
               onChange={e => setForm(p => ({ ...p, imagemUrl: e.target.value }))} />
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-rose-50 rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-brand-gold/10 rounded-xl">
             <input type="checkbox" id="favorito" checked={form.favorito}
               onChange={e => setForm(p => ({ ...p, favorito: e.target.checked }))}
-              className="w-4 h-4 text-rose-600 rounded" />
+              className="w-4 h-4 text-brand-gold rounded" />
             <label htmlFor="favorito" className="text-sm font-medium text-gray-700 flex items-center gap-2 cursor-pointer">
-              <Heart size={14} className="text-rose-500" /> Marcar como favorita
+              <Heart size={14} className="text-brand-gold" /> Marcar como favorita
             </label>
           </div>
 

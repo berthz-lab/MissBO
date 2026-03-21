@@ -268,7 +268,7 @@ export function Financeiro() {
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         {/* Area chart */}
         <div className="card lg:col-span-2">
-          <h3 className="font-bold text-rose-900 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h3 className="font-bold text-brand-black dark:text-gray-100 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
             Evolução Financeira
           </h3>
           <ResponsiveContainer width="100%" height={240}>
@@ -295,7 +295,7 @@ export function Financeiro() {
 
         {/* Pie chart */}
         <div className="card">
-          <h3 className="font-bold text-rose-900 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h3 className="font-bold text-brand-black dark:text-gray-100 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
             Por Forma de Pagamento
           </h3>
           {porForma.length === 0 ? (
@@ -321,7 +321,7 @@ export function Financeiro() {
       {/* Transactions Table */}
       <div className="card p-0 overflow-hidden">
         <div className="p-5 border-b border-gray-100">
-          <h3 className="font-bold text-rose-900" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h3 className="font-bold text-brand-black dark:text-gray-100" style={{ fontFamily: "'Playfair Display', serif" }}>
             Lançamentos
           </h3>
         </div>
@@ -370,7 +370,7 @@ export function Financeiro() {
                         </td>
                         <td className="table-td">
                           <div className="flex gap-1">
-                            <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors">
+                            <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-brand-gold/10 text-gray-400 hover:text-brand-gold transition-colors">
                               <Edit2 size={14} />
                             </button>
                             <button onClick={() => setDeleteConfirm(p.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">

@@ -18,7 +18,7 @@ import { ptBR } from 'date-fns/locale';
 /* ── Constantes ─────────────────────────────────────────────────────── */
 const tiposAgendamento: { value: TipoAgendamento; label: string; color: string; dot: string }[] = [
   { value: 'consulta',       label: 'Consulta Inicial', color: 'bg-blue-100 text-blue-800',   dot: 'bg-blue-500' },
-  { value: 'primeira_prova', label: '1ª Prova',         color: 'bg-rose-100 text-rose-800',   dot: 'bg-rose-500' },
+  { value: 'primeira_prova', label: '1ª Prova',         color: 'bg-brand-gold/15 text-brand-gold-d',   dot: 'bg-brand-gold' },
   { value: 'segunda_prova',  label: '2ª Prova',         color: 'bg-purple-100 text-purple-800', dot: 'bg-purple-500' },
   { value: 'prova_final',    label: 'Prova Final',      color: 'bg-amber-100 text-amber-800',  dot: 'bg-amber-500' },
   { value: 'ajuste',         label: 'Ajuste',           color: 'bg-orange-100 text-orange-800',dot: 'bg-orange-500' },

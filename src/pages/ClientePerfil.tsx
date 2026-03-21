@@ -486,13 +486,13 @@ export function ClientePerfil() {
       .page{max-width:800px;margin:0 auto;padding:60px 50px}
       .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:30px;border-bottom:1px solid #e0e0e0;margin-bottom:36px}
       .brand h1{font-size:28px;letter-spacing:8px;font-weight:bold}
-      .brand .gold{color:#C9A96E}
+      .brand .gold{color:#b38779}
       .brand p{font-size:10px;letter-spacing:5px;color:#999;margin-top:4px}
       .doc-info{text-align:right}
       .doc-info .doc-num{font-size:22px;font-weight:bold;color:#0A0A0A}
       .doc-info .doc-label{font-size:10px;letter-spacing:3px;color:#999;text-transform:uppercase;margin-bottom:4px}
       .doc-info .doc-date{font-size:12px;color:#666;margin-top:6px}
-      .client-box{background:#f9f8f6;border-left:3px solid #C9A96E;padding:20px 24px;margin-bottom:36px;border-radius:0 8px 8px 0}
+      .client-box{background:#f9f8f6;border-left:3px solid #b38779;padding:20px 24px;margin-bottom:36px;border-radius:0 8px 8px 0}
       .client-box h3{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:8px}
       .client-box .name{font-size:18px;font-weight:bold;color:#0A0A0A}
       .client-box .contact{font-size:13px;color:#666;margin-top:4px}
@@ -505,7 +505,7 @@ export function ClientePerfil() {
       .totals{margin-left:auto;width:280px}
       .total-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;color:#666;border-bottom:1px solid #f0f0f0}
       .total-row:last-child{border:none;font-size:17px;font-weight:bold;color:#0A0A0A;padding-top:14px;border-top:2px solid #0A0A0A;margin-top:6px}
-      .total-row .gold-val{color:#C9A96E}
+      .total-row .gold-val{color:#b38779}
       .footer-section{margin-top:60px;display:flex;justify-content:space-between;align-items:flex-end}
       .obs-box{max-width:55%;font-size:12px;color:#888;line-height:1.6;font-style:italic}
       .validity{font-size:12px;color:#888}
@@ -592,7 +592,7 @@ export function ClientePerfil() {
         {/* banner */}
         <div className="h-24 relative" style={{ background: 'linear-gradient(135deg, #0A0A0A 0%, #2D2D2D 60%, #4A4A4A 100%)' }}>
           <div className="absolute inset-0 opacity-10"
-               style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #C9A96E 0%, transparent 60%)' }} />
+               style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #b38779 0%, transparent 60%)' }} />
         </div>
 
         <div className="px-6 pb-6">
@@ -659,15 +659,15 @@ export function ClientePerfil() {
               )}
               <div className={`flex-1 text-center rounded-2xl border px-3 py-2.5 min-w-0 ${
                 proximaProva
-                  ? 'border-rose-200 bg-rose-50'
+                  ? 'border-brand-gold/30 bg-brand-gold/10'
                   : 'border-gray-100 bg-gray-50/60'
               }`}>
                 {proximaProva ? (
                   <>
-                    <p className="text-2xl font-bold text-rose-700" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    <p className="text-2xl font-bold text-brand-gold" style={{ fontFamily: "'Playfair Display', serif" }}>
                       {diasProxProva === 0 ? '🗓' : diasProxProva}
                     </p>
-                    <p className="text-xs text-rose-400 mt-0.5 leading-tight">
+                    <p className="text-xs text-brand-silver mt-0.5 leading-tight">
                       {diasProxProva === 0 ? `${proxProvaLabel} hoje!` : `dias p/ ${proxProvaLabel}`}
                     </p>
                   </>
@@ -1379,7 +1379,7 @@ export function ClientePerfil() {
                     </div>
                     {/* Editar/desfazer via aba Provas */}
                     <button onClick={() => setTab('provas')} title="Gerenciar na aba Provas"
-                      className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-300 hover:text-rose-500 transition-colors">
+                      className="p-1.5 rounded-lg hover:bg-brand-gold/10 text-gray-300 hover:text-brand-gold transition-colors">
                       <ChevronRight size={13}/>
                     </button>
                   </div>
@@ -1420,7 +1420,7 @@ export function ClientePerfil() {
                         </Badge>
                       </div>
                       <button onClick={() => setTab('provas')} title="Gerenciar na aba Provas"
-                        className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-300 hover:text-rose-500 transition-colors">
+                        className="p-1.5 rounded-lg hover:bg-brand-gold/10 text-gray-300 hover:text-brand-gold transition-colors">
                         <ChevronRight size={13}/>
                       </button>
                     </div>

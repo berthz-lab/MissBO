@@ -202,7 +202,7 @@ export function Configuracoes() {
           </div>
           <div className="border-t border-white/10 pt-4 flex items-center justify-between">
             <span className="text-sm opacity-60">Custo total por km (ida)</span>
-            <span className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#C9A96E' }}>
+            <span className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#b38779' }}>
               {fmtMoney(totalKm)}
             </span>
           </div>
@@ -267,8 +267,8 @@ export function Configuracoes() {
         )}
 
         {/* Formulário para novo item */}
-        <div className="p-4 bg-rose-50 rounded-xl border border-rose-100 space-y-3">
-          <p className="text-xs font-semibold text-rose-600 uppercase tracking-wide">Adicionar item padrão</p>
+        <div className="p-4 bg-brand-gold/10 rounded-xl border border-brand-silver/30 space-y-3">
+          <p className="text-xs font-semibold text-brand-gold uppercase tracking-wide">Adicionar item padrão</p>
           <div className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-6">
               <label className="label text-xs">Descrição</label>

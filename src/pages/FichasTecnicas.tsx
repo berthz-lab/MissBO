@@ -183,7 +183,7 @@ export function FichasTecnicas() {
                     </td>
                     <td className="table-td">
                       <div className="flex gap-1">
-                        <button onClick={() => openEdit(fi)} className="p-1.5 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors">
+                        <button onClick={() => openEdit(fi)} className="p-1.5 rounded-lg hover:bg-brand-gold/10 text-gray-400 hover:text-brand-gold transition-colors">
                           <Edit2 size={14} />
                         </button>
                         <button onClick={() => setDeleteConfirm(fi.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">

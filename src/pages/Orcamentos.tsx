@@ -314,7 +314,7 @@ export function Orcamentos() {
             <tr class="sub-row"><td style="text-align:right">Custo total</td><td style="text-align:right">${fmtMoney(cusT)}</td></tr>
             ${m > 0 ? `<tr style="color:#16A34A;background:#fff;border-bottom:none"><td style="padding:4px 12px;font-size:12px;text-align:right">Margem de serviço (${m}%)</td><td style="padding:4px 12px;font-size:12px;text-align:right">+ ${fmtMoney(lucro)}</td></tr>` : ''}
             ${o.desconto > 0 ? `<tr class="disc-row"><td style="text-align:right">Desconto</td><td style="text-align:right;color:#DC2626">− ${fmtMoney(o.desconto)}</td></tr>` : ''}
-            <tr class="total-row"><td style="color:#C9A96E">VALOR TOTAL</td><td style="text-align:right;color:#C9A96E">${fmtMoney(final)}</td></tr>
+            <tr class="total-row"><td style="color:#b38779">VALOR TOTAL</td><td style="text-align:right;color:#b38779">${fmtMoney(final)}</td></tr>
           </tbody>
         </table>
         <div class="payment-box">
@@ -356,7 +356,7 @@ export function Orcamentos() {
               </tr>`).join('')}
             <tr class="sub-row"><td colspan="3" style="text-align:right">Subtotal</td><td style="text-align:right">${fmtMoney(sub)}</td></tr>
             ${o.desconto > 0 ? `<tr class="disc-row"><td colspan="3" style="text-align:right">Desconto</td><td style="text-align:right;color:#DC2626">− ${fmtMoney(o.desconto)}</td></tr>` : ''}
-            <tr class="total-row"><td colspan="3" style="color:#C9A96E">VALOR TOTAL</td><td style="text-align:right;color:#C9A96E">${fmtMoney(tot)}</td></tr>
+            <tr class="total-row"><td colspan="3" style="color:#b38779">VALOR TOTAL</td><td style="text-align:right;color:#b38779">${fmtMoney(tot)}</td></tr>
           </tbody>
         </table>
       `;
@@ -370,7 +370,7 @@ export function Orcamentos() {
         body{font-family:'Inter',sans-serif;color:#1C1C1C;background:#fff;padding:48px;max-width:800px;margin:0 auto;font-size:13px}
         .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:2px solid #0A0A0A;margin-bottom:32px}
         .brand{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;letter-spacing:.15em}
-        .brand span{color:#C9A96E}
+        .brand span{color:#b38779}
         .brand-sub{font-size:9px;letter-spacing:.3em;color:#8A8A8A;margin-top:2px}
         .doc-title{text-align:right}
         .doc-title h2{font-size:18px;font-weight:600;letter-spacing:.05em}
@@ -386,7 +386,7 @@ export function Orcamentos() {
         .sub-row td{text-align:right;color:#4A4A4A;background:#fff;border-bottom:none;font-size:12px;padding:8px 12px}
         .disc-row td{color:#DC2626;font-size:12px;text-align:right;background:#fff;border-bottom:none;padding:4px 12px}
         .total-row{background:#0A0A0A}
-        .total-row td{color:#C9A96E;font-weight:700;font-size:16px;border:none;padding:14px 12px}
+        .total-row td{color:#b38779;font-weight:700;font-size:16px;border:none;padding:14px 12px}
         .payment-box{background:#FEF9EF;border:1px solid #E5D9B8;border-radius:8px;padding:16px;margin-top:24px;font-size:13px;color:#1C1C1C;line-height:1.6}
         .obs-box{background:#F5F3F0;border-radius:8px;padding:16px;margin-top:24px;font-size:12px;color:#4A4A4A;line-height:1.6}
         .validity{font-size:12px;color:#4A4A4A;margin-top:20px;padding:12px;border:1px solid #E5E5E5;border-radius:8px;text-align:center}
@@ -459,7 +459,7 @@ export function Orcamentos() {
                 <div className="min-w-0">
                   <p className="font-mono text-xs text-gray-400">{o.numero}</p>
                   <h3 className="font-bold text-gray-900 text-base mt-0.5 truncate">{cliente?.nome || '—'}</h3>
-                  {o.titulo && <p className="text-sm text-rose-700 font-medium truncate">{o.titulo}</p>}
+                  {o.titulo && <p className="text-sm text-brand-gold font-medium truncate">{o.titulo}</p>}
                   {tipoLbl  && <p className="text-xs text-gray-400 mt-0.5">{tipoLbl}</p>}
                 </div>
                 <Badge variant={statusOpt?.color || 'gray'}>{statusOpt?.label}</Badge>
@@ -484,7 +484,7 @@ export function Orcamentos() {
                 <button onClick={() => handlePrint(o)} className="flex-1 btn-secondary text-xs py-2 justify-center">
                   <Printer size={13} /> Imprimir
                 </button>
-                <button onClick={() => openEdit(o)} className="p-2 rounded-lg hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors">
+                <button onClick={() => openEdit(o)} className="p-2 rounded-lg hover:bg-brand-gold/10 text-gray-400 hover:text-brand-gold transition-colors">
                   <Edit2 size={14} />
                 </button>
                 <button onClick={() => setDeleteConfirm(o.id)} className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
@@ -584,7 +584,7 @@ export function Orcamentos() {
                       onClick={() => setForm(prev => ({ ...prev, dificuldade: d.value }))}
                       className={`py-2 rounded-xl text-sm font-medium border transition-all ${
                         form.dificuldade === d.value
-                          ? 'bg-rose-600 text-white border-rose-600'
+                          ? 'bg-brand-gold text-white border-rose-600'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
                       }`}>
                       {d.label}
@@ -663,7 +663,7 @@ export function Orcamentos() {
           {/* ── Cálculo de lucro ── */}
           <section>
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Cálculo de lucro</h3>
-            <div className="bg-rose-50 rounded-xl p-4 space-y-3">
+            <div className="bg-brand-gold/10 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>Custo total</span>
                 <span className="font-semibold text-gray-800">{fmtMoney(custoTotal)}</span>
@@ -688,7 +688,7 @@ export function Orcamentos() {
                        className="input-field w-28 text-sm text-right"
                        value={form.desconto} onChange={setF('desconto')} />
               </div>
-              <div className="flex justify-between font-bold text-lg text-rose-900 border-t border-rose-200 pt-3">
+              <div className="flex justify-between font-bold text-lg text-brand-black dark:text-gray-100 border-t border-brand-gold/30 pt-3">
                 <span>Total final</span>
                 <span>{fmtMoney(totalFinal)}</span>
               </div>
