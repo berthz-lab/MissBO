@@ -17,11 +17,12 @@ const TIPOS_VESTIDO: {
   assinaturaContrato?: number; entrega?: number;
 }[] = [
   { value: 'noiva',     label: 'Noiva',             atendimento: 300, costura: 500, assinaturaContrato: 350, entrega: 150 },
-  { value: 'civil',     label: 'Civil',              atendimento: 100 },
-  { value: 'madrinha',  label: 'Madrinha',           atendimento: 80  },
-  { value: 'mae_noiva', label: 'Mãe de noiva/noivo', atendimento: 80  },
-  { value: 'social',    label: 'Social',             atendimento: 70  },
-  { value: 'formatura', label: 'Formatura',          atendimento: 70  },
+  { value: 'civil',     label: 'Civil',              atendimento: 80,  costura: 150, assinaturaContrato: 120, entrega: 70  },
+  { value: 'madrinha',  label: 'Madrinha',           atendimento: 100, costura: 250, assinaturaContrato: 150, entrega: 80  },
+  { value: 'mae_noiva', label: 'Mãe de noiva/noivo', atendimento: 120, costura: 350, assinaturaContrato: 150, entrega: 80  },
+  { value: 'social',    label: 'Social',             atendimento: 80,  costura: 150, assinaturaContrato: 120, entrega: 70  },
+  { value: 'formatura', label: 'Formatura',          atendimento: 120, costura: 350, assinaturaContrato: 150, entrega: 80  },
+  { value: 'infantil',  label: 'Infantil',           atendimento: 80,  costura: 150, assinaturaContrato: 120, entrega: 70  },
   { value: 'criativo',  label: 'Criativo',           atendimento: 90  },
 ];
 
