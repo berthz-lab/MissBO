@@ -11,6 +11,7 @@ import { useApp } from '../context/AppContext';
 import { genId } from '../utils/storage';
 import { fmtTelefone } from '../utils/format';
 import { formatCPF, formatPhone } from '../utils/validation';
+import { STATUS_CLIENTE, STATUS_CONTRATO, STATUS_ORCAMENTO, STATUS_FICHA, FORMAS_PAGAMENTO, getStatusInfo } from '../utils/constants';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import {
@@ -32,12 +33,7 @@ function mapsSearchUrl(address: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
-const statusClienteOpt = [
-  { value: 'lead',      label: 'Lead',      color: 'yellow' as const },
-  { value: 'ativo',     label: 'Ativo',     color: 'rose'   as const },
-  { value: 'concluido', label: 'Concluído', color: 'green'  as const },
-  { value: 'cancelado', label: 'Cancelado', color: 'gray'   as const },
-];
+const statusClienteOpt = STATUS_CLIENTE;
 
 const tiposAg: { value: TipoAgendamento; label: string }[] = [
   { value: 'consulta',       label: 'Consulta Inicial' },
@@ -60,28 +56,9 @@ const statusAg = [
   { value: 'cancelado',  label: 'Cancelado',  color: 'gray'   as const },
 ];
 
-const statusContrato = [
-  { value: 'rascunho',     label: 'Rascunho',     color: 'gray'   as const },
-  { value: 'assinado',     label: 'Assinado',     color: 'blue'   as const },
-  { value: 'em_andamento', label: 'Em Andamento', color: 'yellow' as const },
-  { value: 'concluido',    label: 'Concluído',    color: 'green'  as const },
-  { value: 'cancelado',    label: 'Cancelado',    color: 'gray'   as const },
-];
-
-const statusOrc = [
-  { value: 'pendente',  label: 'Pendente',  color: 'yellow' as const },
-  { value: 'aprovado',  label: 'Aprovado',  color: 'green'  as const },
-  { value: 'recusado',  label: 'Recusado',  color: 'red'    as const },
-  { value: 'expirado',  label: 'Expirado',  color: 'gray'   as const },
-];
-
-const formasPag = [
-  { value: 'pix',             label: 'PIX' },
-  { value: 'dinheiro',        label: 'Dinheiro' },
-  { value: 'cartao_credito',  label: 'Cartão Crédito' },
-  { value: 'cartao_debito',   label: 'Cartão Débito' },
-  { value: 'transferencia',   label: 'Transferência' },
-];
+const statusContrato = STATUS_CONTRATO;
+const statusOrc      = STATUS_ORCAMENTO;
+const formasPag      = FORMAS_PAGAMENTO;
 
 const categoriaInsps: { value: CategoriaInspiracao; label: string }[] = [
   { value: 'vestido',   label: 'Vestido' },
@@ -893,14 +870,7 @@ export function ClientePerfil() {
             ? <EmptyState icon={<ClipboardList size={32}/>} text="Nenhuma ficha técnica cadastrada" action={<button onClick={() => navigate(`/fichas-tecnicas?novo=${id}`)} className="btn-primary mt-3 text-sm"><Plus size={14}/>Criar Ficha</button>}/>
             : <div className="space-y-4">
                 {fichas.map(f => {
-                  const statusColors: Record<string, string> = {
-                    aguardando: 'gray', em_corte: 'yellow', costura: 'blue',
-                    prova: 'purple', ajuste: 'rose', concluida: 'green',
-                  };
-                  const statusLabels: Record<string, string> = {
-                    aguardando: 'Aguardando', em_corte: 'Em Corte', costura: 'Costura',
-                    prova: 'Prova', ajuste: 'Ajuste', concluida: 'Concluída',
-                  };
+                  const fichaStatus = getStatusInfo(STATUS_FICHA, f.status);
                   return (
                     <div key={f.id} className="border border-gray-100 rounded-2xl p-5 hover:border-gray-200 transition-colors">
                       <div className="flex items-start justify-between mb-3">
@@ -908,7 +878,7 @@ export function ClientePerfil() {
                           <p className="font-bold text-brand-charcoal">{f.nomePeca}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-gray-500 capitalize">{f.categoria.replace('_', ' ')}</span>
-                            <Badge variant={(statusColors[f.status] || 'gray') as any}>{statusLabels[f.status] || f.status}</Badge>
+                            <Badge variant={fichaStatus.color as any}>{fichaStatus.label}</Badge>
                           </div>
                         </div>
                       </div>

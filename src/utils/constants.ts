@@ -18,7 +18,8 @@ export const STATUS_CONTRATO = [
 export const STATUS_ORCAMENTO = [
   { value: 'pendente',  label: 'Pendente',  color: 'yellow' as const },
   { value: 'aprovado',  label: 'Aprovado',  color: 'green'  as const },
-  { value: 'rejeitado', label: 'Rejeitado', color: 'red'    as const },
+  { value: 'recusado',  label: 'Recusado',  color: 'red'    as const },
+  { value: 'expirado',  label: 'Expirado',  color: 'gray'   as const },
 ] as const;
 
 export const STATUS_FICHA = [

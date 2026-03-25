@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Trash2, Receipt, Printer, Edit2, Car, TrendingUp } from 'lucide-react';
 import { fmtMoney, HIDDEN_VALUE } from '../utils/format';
+import { STATUS_ORCAMENTO } from '../utils/constants';
 import { useApp } from '../context/AppContext';
 import { Orcamento, CustosOrcamento, ItemOrcamento, TamanhoCapaVestido } from '../types';
 import { genId } from '../utils/storage';
@@ -41,12 +42,7 @@ const TAMANHOS_CAPA: { value: TamanhoCapaVestido; label: string; preco: number }
   { value: 'GG', label: 'GG — Cauda (4m+)',    preco: 120 },
 ];
 
-const STATUS_ORC = [
-  { value: 'pendente', label: 'Pendente', color: 'yellow' as const },
-  { value: 'aprovado', label: 'Aprovado', color: 'green'  as const },
-  { value: 'recusado', label: 'Recusado', color: 'red'    as const },
-  { value: 'expirado', label: 'Expirado', color: 'gray'   as const },
-];
+const STATUS_ORC = STATUS_ORCAMENTO;
 
 const EMPTY_FORM = {
   clienteId:           '',

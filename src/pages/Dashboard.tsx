@@ -6,13 +6,7 @@ import { useApp } from '../context/AppContext';
 import { format, isAfter, isBefore, addDays, parseISO, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '../components/ui/Badge';
-
-const statusColors: Record<string, 'rose' | 'green' | 'yellow' | 'gray' | 'red'> = {
-  lead: 'yellow',
-  ativo: 'rose',
-  concluido: 'green',
-  cancelado: 'gray',
-};
+import { STATUS_CLIENTE, getStatusInfo } from '../utils/constants';
 
 const tipoLabels: Record<string, string> = {
   consulta: 'Consulta',
@@ -268,10 +262,8 @@ export function Dashboard() {
                         : '—'}
                     </td>
                     <td className="table-td">
-                      <Badge variant={statusColors[c.status] || 'gray'}>
-                        {c.status === 'lead' ? 'Lead' :
-                          c.status === 'ativo' ? 'Ativo' :
-                            c.status === 'concluido' ? 'Concluído' : 'Cancelado'}
+                      <Badge variant={getStatusInfo(STATUS_CLIENTE, c.status).color as any}>
+                        {getStatusInfo(STATUS_CLIENTE, c.status).label}
                       </Badge>
                     </td>
                   </tr>
@@ -288,10 +280,8 @@ export function Dashboard() {
                    onClick={() => navigate(`/clientes/${c.id}`)}>
                 <div className="flex items-center justify-between mb-1">
                   <p className="font-semibold text-sm text-gray-900">{c.nome}</p>
-                  <Badge variant={statusColors[c.status] || 'gray'}>
-                    {c.status === 'lead' ? 'Lead' :
-                      c.status === 'ativo' ? 'Ativo' :
-                        c.status === 'concluido' ? 'Concluído' : 'Cancelado'}
+                  <Badge variant={getStatusInfo(STATUS_CLIENTE, c.status).color as any}>
+                    {getStatusInfo(STATUS_CLIENTE, c.status).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-gray-500">{fmtTelefone(c.telefone)}</p>
