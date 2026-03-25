@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Edit2, Trash2, Scissors } from 'lucide-react';
+import { Pagination, usePagination } from '../components/ui/Pagination';
 import { fmtMoney } from '../utils/format';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -10,7 +11,7 @@ import { Pagamento } from '../types';
 import { genId } from '../utils/storage';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
-import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, subMonths } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const formasPagamento = [
@@ -31,11 +32,15 @@ const tiposPagamento = [
 const COLORS = ['#f43f5e', '#fb923c', '#facc15', '#4ade80', '#60a5fa', '#a78bfa'];
 
 const periodos = [
-  { value: '1m', label: 'Este mês' },
-  { value: '3m', label: 'Últimos 3 meses' },
-  { value: '6m', label: 'Últimos 6 meses' },
-  { value: '12m', label: 'Último ano' },
-  { value: 'all', label: 'Todo período' },
+  { value: '1m',   label: 'Este mês' },
+  { value: '3m',   label: 'Últimos 3 meses' },
+  { value: '6m',   label: 'Últimos 6 meses' },
+  { value: '12m',  label: 'Último ano' },
+  { value: 'ano',  label: 'Este ano' },
+  { value: 'f3m',  label: 'Próximos 3 meses' },
+  { value: 'f6m',  label: 'Próximos 6 meses' },
+  { value: 'f12m', label: 'Próximo ano' },
+  { value: 'all',  label: 'Todo período' },
 ];
 
 const emptyForm = {
@@ -72,14 +77,30 @@ export function Financeiro() {
     [parcelasProva, clienteIds],
   );
 
+  /* ── Helpers de período ── */
+  const isFuture = periodo.startsWith('f');
+  const periodoMonths = (p: string) => {
+    if (p === '1m') return 1;
+    const n = p.replace('f', '').replace('m', '');
+    return n === '3' ? 3 : n === '6' ? 6 : 12;
+  };
+
   /* ── Pagamentos filtrados pelo período ── */
   const filteredPagamentos = useMemo(() => {
     return pagsValidos.filter(p => {
       if (periodo === 'all') return true;
       const d = parseISO(p.data);
-      const months = periodo === '1m' ? 1 : periodo === '3m' ? 3 : periodo === '6m' ? 6 : 12;
+      if (periodo === 'ano') {
+        return isWithinInterval(d, { start: startOfYear(today), end: endOfYear(today) });
+      }
+      const months = periodoMonths(periodo);
+      if (isFuture) {
+        const start = startOfMonth(today);
+        const end = endOfMonth(addMonths(today, months));
+        return isWithinInterval(d, { start, end });
+      }
       const start = startOfMonth(subMonths(today, months - 1));
-      return isWithinInterval(d, { start, end: today });
+      return isWithinInterval(d, { start, end: endOfMonth(today) });
     });
   }, [pagsValidos, periodo]);
 
@@ -105,9 +126,12 @@ export function Financeiro() {
 
   /* ── Gráfico de evolução mensal ── */
   const monthlyData = useMemo(() => {
-    const months = periodo === '1m' ? 1 : periodo === '3m' ? 3 : periodo === '6m' ? 6 : 12;
-    return Array.from({ length: Math.min(months, 12) }).map((_, i) => {
-      const date = subMonths(today, months - 1 - i);
+    const isYear = periodo === 'ano';
+    const months = isYear ? 12 : periodoMonths(periodo);
+    const count = Math.min(months, 12);
+    const yearStart = isYear ? new Date(today.getFullYear(), 0, 1) : null;
+    return Array.from({ length: isFuture ? count + 1 : count }).map((_, i) => {
+      const date = isYear ? addMonths(yearStart!, i) : isFuture ? addMonths(today, i) : subMonths(today, months - 1 - i);
       const start = startOfMonth(date);
       const end = endOfMonth(date);
       const pags = pagsValidos.filter(p => {
@@ -197,6 +221,21 @@ export function Financeiro() {
   };
 
   const temItensTabela = filteredPagamentos.length > 0 || allProvasPend.length > 0;
+
+  /* ── Lista unificada para paginação ── */
+  type RowPag = { kind: 'pag'; item: Pagamento };
+  type RowProva = { kind: 'prova'; item: typeof allProvasPend[number] };
+  type Row = RowPag | RowProva;
+  const allRows = useMemo<Row[]>(() => {
+    const pags: Row[] = filteredPagamentos
+      .slice().sort((a, b) => b.data.localeCompare(a.data))
+      .map(p => ({ kind: 'pag' as const, item: p }));
+    const provas: Row[] = allProvasPend
+      .slice().sort((a, b) => (a.dataProva || '').localeCompare(b.dataProva || '') || a.numero - b.numero)
+      .map(p => ({ kind: 'prova' as const, item: p }));
+    return [...pags, ...provas];
+  }, [filteredPagamentos, allProvasPend]);
+  const finPag = usePagination(allRows);
 
   return (
     <div>
@@ -348,9 +387,9 @@ export function Financeiro() {
                   </td>
                 </tr>
               ) : (
-                <>
-                  {/* ── Pagamentos manuais ── */}
-                  {filteredPagamentos.slice().sort((a, b) => b.data.localeCompare(a.data)).map(p => {
+                finPag.paged.map(row => {
+                  if (row.kind === 'pag') {
+                    const p = row.item;
                     const cliente = getCliente(p.clienteId);
                     const statusColor = p.status === 'pago' ? 'green' : p.status === 'vencido' ? 'red' : 'yellow';
                     const tipoLabel = tiposPagamento.find(t => t.value === p.tipo)?.label;
@@ -380,65 +419,45 @@ export function Financeiro() {
                         </td>
                       </tr>
                     );
-                  })}
-
-                  {/* ── Separador de provas ── */}
-                  {allProvasPend.length > 0 && (
-                    <>
-                      {filteredPagamentos.length > 0 && (
-                        <tr>
-                          <td colSpan={8} className="px-5 py-2 bg-amber-50 border-t border-b border-amber-100">
-                            <span className="text-xs font-semibold text-amber-600 flex items-center gap-1.5 uppercase tracking-wide">
-                              <Scissors size={11} /> Parcelas de Prova Pendentes
-                            </span>
-                          </td>
-                        </tr>
-                      )}
-
-                      {/* ── Linhas de provas pendentes ── */}
-                      {allProvasPend
-                        .slice()
-                        .sort((a, b) => (a.dataProva || '').localeCompare(b.dataProva || '') || a.numero - b.numero)
-                        .map(p => {
-                          const cliente = getCliente(p.clienteId);
-                          const isOverdue = !!(p.dataProva && p.dataProva < todayStr);
-                          const statusColor = isOverdue ? 'red' : 'yellow';
-                          return (
-                            <tr key={p.id} className="table-row bg-amber-50/30">
-                              <td className="table-td font-medium">{cliente?.nome || '—'}</td>
-                              <td className="table-td text-gray-500">
-                                <span className="flex items-center gap-1.5">
-                                  <Scissors size={12} className="text-amber-500 flex-shrink-0" />
-                                  Parcela {p.numero} de prova
-                                  {p.dataProva && (
-                                    <span className="text-gray-400"> — {format(parseISO(p.dataProva), 'dd/MM/yyyy')}</span>
-                                  )}
-                                </span>
-                              </td>
-                              <td className="table-td text-gray-500">
-                                {p.dataProva ? format(parseISO(p.dataProva), 'dd/MM/yyyy') : '—'}
-                              </td>
-                              <td className="table-td"><Badge variant="gray">Parcela</Badge></td>
-                              <td className="table-td text-gray-400">—</td>
-                              <td className="table-td font-semibold text-gray-900">{formatMoney(p.valorParcela)}</td>
-                              <td className="table-td">
-                                <Badge variant={statusColor as 'red' | 'yellow'}>
-                                  {isOverdue ? 'Vencido' : 'Pendente'}
-                                </Badge>
-                              </td>
-                              <td className="table-td">
-                                <span className="text-xs text-gray-400 italic">Gerado em Provas</span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </>
-                  )}
-                </>
+                  }
+                  const p = row.item;
+                  const cliente = getCliente(p.clienteId);
+                  const isOverdue = !!(p.dataProva && p.dataProva < todayStr);
+                  const statusColor = isOverdue ? 'red' : 'yellow';
+                  return (
+                    <tr key={p.id} className="table-row bg-amber-50/30">
+                      <td className="table-td font-medium">{cliente?.nome || '—'}</td>
+                      <td className="table-td text-gray-500">
+                        <span className="flex items-center gap-1.5">
+                          <Scissors size={12} className="text-amber-500 flex-shrink-0" />
+                          Parcela {p.numero} de prova
+                          {p.dataProva && (
+                            <span className="text-gray-400"> — {format(parseISO(p.dataProva), 'dd/MM/yyyy')}</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="table-td text-gray-500">
+                        {p.dataProva ? format(parseISO(p.dataProva), 'dd/MM/yyyy') : '—'}
+                      </td>
+                      <td className="table-td"><Badge variant="gray">Parcela</Badge></td>
+                      <td className="table-td text-gray-400">—</td>
+                      <td className="table-td font-semibold text-gray-900">{formatMoney(p.valorParcela)}</td>
+                      <td className="table-td">
+                        <Badge variant={statusColor as 'red' | 'yellow'}>
+                          {isOverdue ? 'Vencido' : 'Pendente'}
+                        </Badge>
+                      </td>
+                      <td className="table-td">
+                        <span className="text-xs text-gray-400 italic">Gerado em Provas</span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
+        <Pagination page={finPag.page} totalItems={finPag.total} pageSize={finPag.pageSize} onPageChange={finPag.setPage} onPageSizeChange={finPag.setPageSize} />
       </div>
 
       {/* Form Modal */}

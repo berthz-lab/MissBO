@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, FileText, Printer, Paperclip, X, Link2 } from 'lucide-react';
+import { Pagination, usePagination } from '../components/ui/Pagination';
 import { useApp } from '../context/AppContext';
 import { Contrato } from '../types';
 import { genId } from '../utils/storage';
@@ -52,6 +53,7 @@ export function Contratos() {
       c.numero.toLowerCase().includes(search.toLowerCase()) ||
       cliente?.nome.toLowerCase().includes(search.toLowerCase());
   });
+  const pg = usePagination(filtered);
 
   const openNew = (prefillClienteId?: string) => {
     setEditingContrato(null);
@@ -285,7 +287,7 @@ export function Contratos() {
             <FileText size={32} className="mx-auto mb-2 opacity-30" />
             <p>Nenhum contrato cadastrado</p>
           </div>
-        ) : filtered.map(c => {
+        ) : pg.paged.map(c => {
           const cliente = getCliente(c.clienteId);
           const statusOpt = statusContrato.find(s => s.value === c.status);
           return (
@@ -354,7 +356,7 @@ export function Contratos() {
                     <p>Nenhum contrato cadastrado</p>
                   </td>
                 </tr>
-              ) : filtered.map(c => {
+              ) : pg.paged.map(c => {
                 const cliente = getCliente(c.clienteId);
                 const statusOpt = statusContrato.find(s => s.value === c.status);
                 return (
@@ -415,6 +417,12 @@ export function Contratos() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pg.page} totalItems={pg.total} pageSize={pg.pageSize} onPageChange={pg.setPage} onPageSizeChange={pg.setPageSize} />
+      </div>
+
+      {/* Mobile pagination */}
+      <div className="sm:hidden">
+        <Pagination page={pg.page} totalItems={pg.total} pageSize={pg.pageSize} onPageChange={pg.setPage} onPageSizeChange={pg.setPageSize} />
       </div>
 
       {/* Form Modal */}

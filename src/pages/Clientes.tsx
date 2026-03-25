@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, Heart, Phone, Mail, MapPin, Eye, AlertTriangle } from 'lucide-react';
+import { Pagination, usePagination } from '../components/ui/Pagination';
 import { useApp } from '../context/AppContext';
 import { Cliente } from '../types';
 import { genId } from '../utils/storage';
@@ -43,6 +44,7 @@ export function Clientes() {
     const matchStatus = !statusFilter || c.status === statusFilter;
     return matchSearch && matchStatus;
   });
+  const pg = usePagination(filtered);
 
   const openNew = () => {
     setEditingCliente(null);
@@ -126,7 +128,7 @@ export function Clientes() {
             <p className="text-lg font-medium">Nenhuma cliente encontrada</p>
             <p className="text-sm mt-1">Cadastre sua primeira noiva!</p>
           </div>
-        ) : filtered.map(c => {
+        ) : pg.paged.map(c => {
           const statusOpt = statusOptions.find(s => s.value === c.status);
           return (
             <div key={c.id} className="card hover:shadow-lg transition-all group">
@@ -186,6 +188,7 @@ export function Clientes() {
           );
         })}
       </div>
+      <Pagination page={pg.page} totalItems={pg.total} pageSize={pg.pageSize} onPageChange={pg.setPage} onPageSizeChange={pg.setPageSize} />
 
       {/* Form Modal */}
       <Modal

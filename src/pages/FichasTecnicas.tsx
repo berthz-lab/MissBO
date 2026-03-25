@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, ClipboardList } from 'lucide-react';
+import { Pagination, usePagination } from '../components/ui/Pagination';
 import { useApp } from '../context/AppContext';
 import { FichaTecnica } from '../types';
 import { genId } from '../utils/storage';
@@ -70,6 +71,7 @@ export function FichasTecnicas() {
     const matchStatus = !statusFilter || f.status === statusFilter;
     return matchSearch && matchCliente && matchStatus;
   });
+  const pg = usePagination(filtered);
 
   const openNew = (prefillClienteId?: string) => {
     setEditingFicha(null);
@@ -173,7 +175,7 @@ export function FichasTecnicas() {
                     <p>Nenhuma ficha técnica encontrada</p>
                   </td>
                 </tr>
-              ) : filtered.map(fi => {
+              ) : pg.paged.map(fi => {
                 const cliente = getCliente(fi.clienteId);
                 const statusOpt = statusFicha.find(s => s.value === fi.status);
                 const catOpt = categorias.find(c => c.value === fi.categoria);
@@ -208,6 +210,7 @@ export function FichasTecnicas() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pg.page} totalItems={pg.total} pageSize={pg.pageSize} onPageChange={pg.setPage} onPageSizeChange={pg.setPageSize} />
       </div>
 
       {/* Form Modal */}
