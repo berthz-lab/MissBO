@@ -31,7 +31,7 @@ const emptyContrato = {
 };
 
 export function Contratos() {
-  const { clientes, contratos, orcamentos, saveContrato, deleteContrato, nextNumeroContrato } = useApp();
+  const { clientes, contratos, orcamentos, saveContrato, deleteContrato, nextNumeroContrato, valoresOcultos } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch]             = useState('');
   const [modalOpen, setModalOpen]       = useState(false);
@@ -158,7 +158,7 @@ export function Contratos() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm(prev => ({ ...prev, [k]: e.target.value }));
 
-  const formatMoney = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatMoney = (v: number) => valoresOcultos ? 'R$ •••••' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const handlePrint = (c: Contrato) => {
     const cliente = getCliente(c.clienteId);

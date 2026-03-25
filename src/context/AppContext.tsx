@@ -24,6 +24,9 @@ interface AppContextType {
   isLoggedIn: boolean;
   login: (senha: string) => boolean;
   logout: () => void;
+  // Valores ocultos
+  valoresOcultos: boolean;
+  toggleValores: () => void;
   // Clientes
   clientes: Cliente[];
   saveCliente: (c: Cliente) => void;
@@ -83,6 +86,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<{ msg: string; type: 'error' | 'success' } | null>(null);
   const clearToast = () => setToast(null);
   const [isLoggedIn, setIsLoggedIn] = useState(authStorage.isLoggedIn());
+  const [valoresOcultos, setValoresOcultos] = useState(true);
+  const toggleValores = useCallback(() => setValoresOcultos(v => !v), []);
   const [config, setConfig] = useState<ConfigSistema>(configStorage.get());
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [medidas, setMedidas] = useState<MedidasNoiva[]>([]);
@@ -486,7 +491,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading,
       toast, clearToast,
       config, saveConfig, custoPorKm,
-      isLoggedIn, login, logout,
+      isLoggedIn, login, logout, valoresOcultos, toggleValores,
       clientes, saveCliente, deleteCliente, getCliente,
       medidas, saveMedidas, deleteMedidas, getMedidasByCliente,
       fichasTecnicas, saveFicha, deleteFicha, getFichasByCliente,

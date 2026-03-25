@@ -2,6 +2,9 @@
 export const fmtMoney = (v: number): string =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+/** Valor mascarado */
+export const HIDDEN_VALUE = 'R$ •••••';
+
 /**
  * Formata telefone brasileiro:
  * "27998016927"  → "(27) 99801-6927"  (celular 11 dígitos)

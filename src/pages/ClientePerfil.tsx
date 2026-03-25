@@ -22,7 +22,7 @@ import { ptBR } from 'date-fns/locale';
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 const fmt = (d: string) => format(parseISO(d), 'dd/MM/yyyy');
-const fmtMoney = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const _fmtMoney = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 function mapsRouteUrl(origin: string, destination: string) {
   return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
@@ -137,7 +137,8 @@ export function ClientePerfil() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const app = useApp();
-  const { custoPorKm, config } = app;
+  const { custoPorKm, config, valoresOcultos } = app;
+  const fmtMoney = (v: number) => valoresOcultos ? 'R$ •••••' : _fmtMoney(v);
   const cliente = app.getCliente(id!);
 
   const [tab, setTab] = useState<Tab>('info');
@@ -544,15 +545,15 @@ export function ClientePerfil() {
         ${o.itens.map(i => `<tr>
           <td>${i.descricao}</td>
           <td style="text-align:center">${i.quantidade}</td>
-          <td style="text-align:right">${fmtMoney(i.valorUnitario)}</td>
-          <td style="text-align:right">${fmtMoney(i.quantidade * i.valorUnitario)}</td>
+          <td style="text-align:right">${_fmtMoney(i.valorUnitario)}</td>
+          <td style="text-align:right">${_fmtMoney(i.quantidade * i.valorUnitario)}</td>
         </tr>`).join('')}
       </tbody>
     </table>
     <div class="totals">
-      <div class="total-row"><span>Subtotal</span><span>${fmtMoney(sub)}</span></div>
-      ${o.desconto > 0 ? `<div class="total-row"><span>Desconto</span><span style="color:#dc2626">− ${fmtMoney(o.desconto)}</span></div>` : ''}
-      <div class="total-row"><span>Total</span><span class="gold-val">${fmtMoney(tot)}</span></div>
+      <div class="total-row"><span>Subtotal</span><span>${_fmtMoney(sub)}</span></div>
+      ${o.desconto > 0 ? `<div class="total-row"><span>Desconto</span><span style="color:#dc2626">− ${_fmtMoney(o.desconto)}</span></div>` : ''}
+      <div class="total-row"><span>Total</span><span class="gold-val">${_fmtMoney(tot)}</span></div>
     </div>
     <div class="footer-section">
       <div>

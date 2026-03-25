@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Trash2, Receipt, Printer, Edit2, Car, TrendingUp } from 'lucide-react';
-import { fmtMoney } from '../utils/format';
+import { fmtMoney, HIDDEN_VALUE } from '../utils/format';
 import { useApp } from '../context/AppContext';
 import { Orcamento, CustosOrcamento, ItemOrcamento, TamanhoCapaVestido } from '../types';
 import { genId } from '../utils/storage';
@@ -109,7 +109,8 @@ function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
 
 export function Orcamentos() {
   const { clientes, orcamentos, saveOrcamento, deleteOrcamento, nextNumeroOrcamento,
-          custoPorKm, config } = useApp();
+          custoPorKm, config, valoresOcultos } = useApp();
+  const fm = (v: number) => valoresOcultos ? HIDDEN_VALUE : fmtMoney(v);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search,        setSearch]        = useState('');
@@ -520,7 +521,7 @@ export function Orcamentos() {
 
               <div className="pt-3 border-t border-gray-100 flex items-center justify-between mb-4">
                 <span className="text-xs text-gray-400">Total</span>
-                <span className="text-xl font-bold text-emerald-700">{fmtMoney(total)}</span>
+                <span className="text-xl font-bold text-emerald-700">{fm(total)}</span>
               </div>
 
               <div className="flex gap-2">
@@ -655,7 +656,7 @@ export function Orcamentos() {
                       }`}>
                       {c.value || '—'}
                       <span className="block text-[10px] mt-0.5 opacity-70">
-                        {c.preco > 0 ? fmtMoney(c.preco) : 'Nenhuma'}
+                        {c.preco > 0 ? fm(c.preco) : 'Nenhuma'}
                       </span>
                     </button>
                   ))}
@@ -713,7 +714,7 @@ export function Orcamentos() {
                 {n('assinaturaContrato') > 0 && ` + visita contrato`}
                 {n('entrega') > 0 && ` + visita entrega`}
               </span>
-              <span className="font-bold text-blue-800">{fmtMoney(atendimentoTotal)}</span>
+              <span className="font-bold text-blue-800">{fm(atendimentoTotal)}</span>
             </div>
           </section>
 
@@ -745,7 +746,7 @@ export function Orcamentos() {
             <div className="bg-brand-gold/10 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>Custo total</span>
-                <span className="font-semibold text-gray-800">{fmtMoney(custoTotal)}</span>
+                <span className="font-semibold text-gray-800">{fm(custoTotal)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <label className="text-sm text-gray-600">Margem de lucro (%)</label>
@@ -755,11 +756,11 @@ export function Orcamentos() {
               </div>
               <div className="flex items-center justify-between text-sm text-emerald-700">
                 <span>Lucro ({form.margemLucro}%)</span>
-                <span className="font-semibold">+ {fmtMoney(lucroValor)}</span>
+                <span className="font-semibold">+ {fm(lucroValor)}</span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>Preço sugerido</span>
-                <span className="font-semibold">{fmtMoney(precoSugerido)}</span>
+                <span className="font-semibold">{fm(precoSugerido)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <label className="text-sm text-gray-600">Desconto (R$)</label>
@@ -769,7 +770,7 @@ export function Orcamentos() {
               </div>
               <div className="flex justify-between font-bold text-lg text-brand-black dark:text-gray-100 border-t border-brand-gold/30 pt-3">
                 <span>Total final</span>
-                <span>{fmtMoney(totalFinal)}</span>
+                <span>{fm(totalFinal)}</span>
               </div>
             </div>
           </section>
@@ -787,15 +788,15 @@ export function Orcamentos() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Valor da entrada</span>
-                  <span className="font-bold text-amber-800">{fmtMoney(entradaValor)}</span>
+                  <span className="font-bold text-amber-800">{fm(entradaValor)}</span>
                 </div>
                 <div className="border-t border-amber-200 pt-3 flex items-center justify-between text-sm">
                   <span className="text-gray-600">Saldo restante</span>
-                  <span className="font-semibold text-gray-800">{fmtMoney(saldoRestante)}</span>
+                  <span className="font-semibold text-gray-800">{fm(saldoRestante)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">{qtdProvas}× parcelas (1 por prova)</span>
-                  <span className="font-bold text-amber-800">{fmtMoney(valorParcela)}</span>
+                  <span className="font-bold text-amber-800">{fm(valorParcela)}</span>
                 </div>
                 {/* Toggle arredondar */}
                 <div className="border-t border-amber-200 pt-3 flex items-center justify-between">

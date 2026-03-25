@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmtMoney, fmtTelefone } from '../utils/format';
+import { fmtMoney, fmtTelefone, HIDDEN_VALUE } from '../utils/format';
 import { Users, Calendar, Receipt, TrendingUp, Heart, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { format, isAfter, isBefore, addDays, parseISO, isToday } from 'date-fns';
@@ -25,7 +25,7 @@ const tipoLabels: Record<string, string> = {
 };
 
 export function Dashboard() {
-  const { clientes, agendamentos, pagamentos, parcelasProva, fichasTecnicas, contratos } = useApp();
+  const { clientes, agendamentos, pagamentos, parcelasProva, fichasTecnicas, contratos, valoresOcultos } = useApp();
   const navigate = useNavigate();
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
@@ -71,7 +71,7 @@ export function Dashboard() {
 
   const fichasEmAndamento = fichasTecnicas.filter(f => f.status !== 'concluida').length;
 
-  const formatMoney = fmtMoney;
+  const formatMoney = (v: number) => valoresOcultos ? HIDDEN_VALUE : fmtMoney(v);
 
   return (
     <div>

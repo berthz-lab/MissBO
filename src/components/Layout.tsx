@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Ruler, FileText,
   Receipt, Calendar, BarChart3, Image, LogOut, Menu, X, ChevronRight, Settings,
-  AlertCircle, CheckCircle2, Moon, Sun, ClipboardList,
+  AlertCircle, CheckCircle2, Moon, Sun, ClipboardList, Eye, EyeOff,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../hooks/useTheme';
@@ -26,7 +26,7 @@ const navItems = [
 
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { logout, toast, clearToast } = useApp();
+  const { logout, toast, clearToast, valoresOcultos, toggleValores } = useApp();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
@@ -65,6 +65,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Footer */}
       <div className="px-3 py-4 border-t border-white/5 space-y-0.5 flex-shrink-0">
+        <button
+          onClick={toggleValores}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/8"
+          style={{ color: 'rgba(255,255,255,0.45)' }}
+        >
+          {valoresOcultos ? <EyeOff size={16} /> : <Eye size={16} />}
+          <span>{valoresOcultos ? 'Mostrar Valores' : 'Ocultar Valores'}</span>
+        </button>
         <button
           onClick={toggleTheme}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-white/8"
@@ -120,10 +128,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Menu size={20} />
           </button>
           <img src={isDark ? logoClaro : logoEscuro} alt="Miss Bô Ateliê" className="h-16 w-auto" />
-          <button onClick={toggleTheme}
-                  className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={toggleValores} title={valoresOcultos ? 'Mostrar valores' : 'Ocultar valores'}
+                    className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
+              {valoresOcultos ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+            <button onClick={toggleTheme}
+                    className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-brand-pearl text-brand-smoke'}`}>
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
         </header>
 
         {/* Page */}

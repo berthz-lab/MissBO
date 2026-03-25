@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Edit2, Trash2, Scissors } from 'lucide-react';
 import { Pagination, usePagination } from '../components/ui/Pagination';
-import { fmtMoney } from '../utils/format';
+import { fmtMoney, HIDDEN_VALUE } from '../utils/format';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
@@ -54,7 +54,7 @@ const emptyForm = {
 };
 
 export function Financeiro() {
-  const { clientes, pagamentos, parcelasProva, savePagamento, deletePagamento } = useApp();
+  const { clientes, pagamentos, parcelasProva, savePagamento, deletePagamento, valoresOcultos } = useApp();
   const [periodo, setPeriodo] = useState('3m');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPag, setEditingPag] = useState<Pagamento | null>(null);
@@ -164,7 +164,7 @@ export function Financeiro() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredPagamentos]);
 
-  const formatMoney = fmtMoney;
+  const formatMoney = (v: number) => valoresOcultos ? HIDDEN_VALUE : fmtMoney(v);
 
   const openNew = () => {
     setEditingPag(null);
