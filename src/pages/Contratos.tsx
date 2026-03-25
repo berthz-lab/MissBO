@@ -263,7 +263,7 @@ export function Contratos() {
           <h1 className="section-title">Contratos</h1>
           <p className="text-gray-500 text-sm mt-1">{contratos.length} contratos</p>
         </div>
-        <button className="btn-primary" onClick={openNew}>
+        <button className="btn-primary" onClick={() => openNew()}>
           <Plus size={16} /> Novo Contrato
         </button>
       </div>
