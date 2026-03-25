@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AppProvider, useApp } from './context/AppContext';
 import { Layout } from './components/Layout';
-import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Clientes } from './pages/Clientes';
-import { ClientePerfil } from './pages/ClientePerfil';
-import { FichaNoiva } from './pages/FichaNoiva';
-import { Contratos } from './pages/Contratos';
-import { Orcamentos } from './pages/Orcamentos';
-import { Agenda } from './pages/Agenda';
-import { Financeiro } from './pages/Financeiro';
-import { Inspiracoes } from './pages/Inspiracoes';
-import { Configuracoes } from './pages/Configuracoes';
-import { FichasTecnicas } from './pages/FichasTecnicas';
 import logoEscuroCentro from './assets/logo-escuro-centro.png';
+
+// Páginas carregadas sob demanda (lazy) — cada uma vira um chunk separado
+const Login         = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const Dashboard     = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Clientes      = lazy(() => import('./pages/Clientes').then(m => ({ default: m.Clientes })));
+const ClientePerfil = lazy(() => import('./pages/ClientePerfil').then(m => ({ default: m.ClientePerfil })));
+const FichaNoiva    = lazy(() => import('./pages/FichaNoiva').then(m => ({ default: m.FichaNoiva })));
+const Contratos     = lazy(() => import('./pages/Contratos').then(m => ({ default: m.Contratos })));
+const Orcamentos    = lazy(() => import('./pages/Orcamentos').then(m => ({ default: m.Orcamentos })));
+const Agenda        = lazy(() => import('./pages/Agenda').then(m => ({ default: m.Agenda })));
+const Financeiro    = lazy(() => import('./pages/Financeiro').then(m => ({ default: m.Financeiro })));
+const Inspiracoes   = lazy(() => import('./pages/Inspiracoes').then(m => ({ default: m.Inspiracoes })));
+const Configuracoes = lazy(() => import('./pages/Configuracoes').then(m => ({ default: m.Configuracoes })));
+const FichasTecnicas = lazy(() => import('./pages/FichasTecnicas').then(m => ({ default: m.FichasTecnicas })));
 
 function LoadingScreen() {
   return (
@@ -75,7 +77,9 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AppProvider>
-          <AppRoutes />
+          <Suspense fallback={<LoadingScreen />}>
+            <AppRoutes />
+          </Suspense>
         </AppProvider>
       </BrowserRouter>
     </ErrorBoundary>

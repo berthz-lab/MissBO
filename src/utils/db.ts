@@ -10,10 +10,14 @@ import {
   Orcamento, ItemOrcamento, Agendamento, Pagamento,
   Inspiracao, ParcelaProva, ConfigSistema, ItemPadraoOrcamento, defaultConfig,
 } from '../types';
+import {
+  ClienteRow, MedidasRow, FichaRow, ContratoRow,
+  OrcamentoRow, ItemOrcamentoRow, AgendamentoRow, PagamentoRow,
+  ParcelaProvaRow, InspiacaoRow, ConfigRow,
+} from '../types/db-rows';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const ou = <T>(v: T | null | undefined): T | undefined => (v != null ? v : undefined);
-const num = (v: unknown): number | undefined => (v != null ? Number(v) : undefined);
 
 // Array upsert helper (mantém imutabilidade)
 export function upsertArr<T extends { id: string }>(arr: T[], item: T): T[] {
@@ -27,26 +31,26 @@ export function upsertArr<T extends { id: string }>(arr: T[], item: T): T[] {
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ── Cliente ───────────────────────────────────────────────────────────────────
-function toCliente(r: Record<string, unknown>): Cliente {
+function toCliente(r: ClienteRow): Cliente {
   return {
-    id: r.id as string,
-    nome: r.nome as string,
-    telefone: r.telefone as string,
-    email: (r.email as string) ?? '',
-    cpf: ou(r.cpf as string),
-    dataContato: r.data_contato as string,
-    dataCasamento: ou(r.data_casamento as string),
-    local: ou(r.local as string),
-    endereco: ou(r.endereco as string),
-    distanciaKm: num(r.distancia_km),
-    instagram: ou(r.instagram as string),
-    indicacao: ou(r.indicacao as string),
+    id: r.id,
+    nome: r.nome,
+    telefone: r.telefone,
+    email: r.email ?? '',
+    cpf: ou(r.cpf),
+    dataContato: r.data_contato,
+    dataCasamento: ou(r.data_casamento),
+    local: ou(r.local),
+    endereco: ou(r.endereco),
+    distanciaKm: r.distancia_km ?? undefined,
+    instagram: ou(r.instagram),
+    indicacao: ou(r.indicacao),
     status: r.status as Cliente['status'],
-    observacoes: ou(r.observacoes as string),
-    createdAt: r.created_at as string,
+    observacoes: ou(r.observacoes),
+    createdAt: r.created_at,
   };
 }
-function fromCliente(c: Cliente): Record<string, unknown> {
+function fromCliente(c: Cliente): Partial<ClienteRow> {
   return {
     id: c.id, nome: c.nome, telefone: c.telefone,
     email: c.email || null, cpf: c.cpf ?? null,
@@ -58,28 +62,30 @@ function fromCliente(c: Cliente): Record<string, unknown> {
   };
 }
 
+const n = (v: number | null): number | undefined => (v != null ? v : undefined);
+
 // ── MedidasNoiva ──────────────────────────────────────────────────────────────
-function toMedidas(r: Record<string, unknown>): MedidasNoiva {
+function toMedidas(r: MedidasRow): MedidasNoiva {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    data: r.data as string, createdAt: r.created_at as string,
-    busto: num(r.busto), cavaAcavasCostas: num(r.cava_a_cavas_costas),
-    abaixoDoBusto: num(r.abaixo_do_busto), cavaAcavasFrente: num(r.cava_a_cavas_frente),
-    quadril: num(r.quadril), colarinho: num(r.colarinho),
-    ombroAOmbro: num(r.ombro_a_ombro), altCentroFrente: num(r.alt_centro_frente),
-    altOmbroFrente: num(r.alt_ombro_frente), altOmbroCostas: num(r.alt_ombro_costas),
-    altCentroCostas: num(r.alt_centro_costas), separacaoBusto: num(r.separacao_busto),
-    cintura: num(r.cintura), altBusto: num(r.alt_busto),
-    altGanchoFrente: num(r.alt_gancho_frente), altQuadril: num(r.alt_quadril),
-    altDesejadaSaia: num(r.alt_desejada_saia), altCinturaAoJoelho: num(r.alt_cintura_ao_joelho),
-    punho: num(r.punho), largJoelho: num(r.larg_joelho),
-    alturaLateral: num(r.altura_lateral), largBraco: num(r.larg_braco),
-    cumprimentoBraco: num(r.cumprimento_braco), altManga34: num(r.alt_manga_34),
-    alturaMangaCurta: num(r.altura_manga_curta), ombro: num(r.ombro),
-    observacoes: ou(r.observacoes as string),
+    id: r.id, clienteId: r.cliente_id,
+    data: r.data, createdAt: r.created_at,
+    busto: n(r.busto), cavaAcavasCostas: n(r.cava_a_cavas_costas),
+    abaixoDoBusto: n(r.abaixo_do_busto), cavaAcavasFrente: n(r.cava_a_cavas_frente),
+    quadril: n(r.quadril), colarinho: n(r.colarinho),
+    ombroAOmbro: n(r.ombro_a_ombro), altCentroFrente: n(r.alt_centro_frente),
+    altOmbroFrente: n(r.alt_ombro_frente), altOmbroCostas: n(r.alt_ombro_costas),
+    altCentroCostas: n(r.alt_centro_costas), separacaoBusto: n(r.separacao_busto),
+    cintura: n(r.cintura), altBusto: n(r.alt_busto),
+    altGanchoFrente: n(r.alt_gancho_frente), altQuadril: n(r.alt_quadril),
+    altDesejadaSaia: n(r.alt_desejada_saia), altCinturaAoJoelho: n(r.alt_cintura_ao_joelho),
+    punho: n(r.punho), largJoelho: n(r.larg_joelho),
+    alturaLateral: n(r.altura_lateral), largBraco: n(r.larg_braco),
+    cumprimentoBraco: n(r.cumprimento_braco), altManga34: n(r.alt_manga_34),
+    alturaMangaCurta: n(r.altura_manga_curta), ombro: n(r.ombro),
+    observacoes: ou(r.observacoes),
   };
 }
-function fromMedidas(m: MedidasNoiva): Record<string, unknown> {
+function fromMedidas(m: MedidasNoiva): Partial<MedidasRow> {
   return {
     id: m.id, cliente_id: m.clienteId, data: m.data,
     created_at: m.createdAt ?? new Date().toISOString(),
@@ -101,18 +107,18 @@ function fromMedidas(m: MedidasNoiva): Record<string, unknown> {
 }
 
 // ── FichaTecnica ──────────────────────────────────────────────────────────────
-function toFicha(r: Record<string, unknown>): FichaTecnica {
+function toFicha(r: FichaRow): FichaTecnica {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    nomePeca: r.nome_peca as string, categoria: r.categoria as FichaTecnica['categoria'],
-    tecido: (r.tecido as string) ?? '', cor: (r.cor as string) ?? '',
-    modelagem: (r.modelagem as string) ?? '', detalhes: (r.detalhes as string) ?? '',
-    status: r.status as FichaTecnica['status'], dataEntrega: ou(r.data_entrega as string),
-    valorCusto: num(r.valor_custo), valorVenda: num(r.valor_venda),
-    observacoes: ou(r.observacoes as string), createdAt: r.created_at as string,
+    id: r.id, clienteId: r.cliente_id,
+    nomePeca: r.nome_peca, categoria: r.categoria as FichaTecnica['categoria'],
+    tecido: r.tecido ?? '', cor: r.cor ?? '',
+    modelagem: r.modelagem ?? '', detalhes: r.detalhes ?? '',
+    status: r.status as FichaTecnica['status'], dataEntrega: ou(r.data_entrega),
+    valorCusto: n(r.valor_custo), valorVenda: n(r.valor_venda),
+    observacoes: ou(r.observacoes), createdAt: r.created_at,
   };
 }
-function fromFicha(f: FichaTecnica): Record<string, unknown> {
+function fromFicha(f: FichaTecnica): Partial<FichaRow> {
   return {
     id: f.id, cliente_id: f.clienteId, nome_peca: f.nomePeca,
     categoria: f.categoria, tecido: f.tecido || null, cor: f.cor || null,
@@ -124,20 +130,20 @@ function fromFicha(f: FichaTecnica): Record<string, unknown> {
 }
 
 // ── Contrato ──────────────────────────────────────────────────────────────────
-function toContrato(r: Record<string, unknown>): Contrato {
+function toContrato(r: ContratoRow): Contrato {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    numero: r.numero as string, orcamentoId: ou(r.orcamento_id as string),
-    dataAssinatura: r.data_assinatura as string, dataEntrega: (r.data_entrega as string) ?? '',
-    valorTotal: Number(r.valor_total), valorEntrada: Number(r.valor_entrada),
-    parcelasRestantes: num(r.parcelas_restantes), quantidadeProvas: num(r.quantidade_provas),
-    status: r.status as Contrato['status'], descricaoPecas: (r.descricao_pecas as string) ?? '',
-    clausulasEspeciais: ou(r.clausulas_especiais as string),
-    anexoBase64: ou(r.anexo_base64 as string), anexoNome: ou(r.anexo_nome as string),
-    anexoTipo: ou(r.anexo_tipo as string), createdAt: r.created_at as string,
+    id: r.id, clienteId: r.cliente_id,
+    numero: r.numero, orcamentoId: ou(r.orcamento_id),
+    dataAssinatura: r.data_assinatura, dataEntrega: r.data_entrega ?? '',
+    valorTotal: r.valor_total, valorEntrada: r.valor_entrada,
+    parcelasRestantes: n(r.parcelas_restantes), quantidadeProvas: n(r.quantidade_provas),
+    status: r.status as Contrato['status'], descricaoPecas: r.descricao_pecas ?? '',
+    clausulasEspeciais: ou(r.clausulas_especiais),
+    anexoBase64: ou(r.anexo_base64), anexoNome: ou(r.anexo_nome),
+    anexoTipo: ou(r.anexo_tipo), createdAt: r.created_at,
   };
 }
-function fromContrato(c: Contrato): Record<string, unknown> {
+function fromContrato(c: Contrato): Partial<ContratoRow> {
   return {
     id: c.id, cliente_id: c.clienteId, numero: c.numero,
     orcamento_id: c.orcamentoId ?? null, data_assinatura: c.dataAssinatura,
@@ -151,29 +157,28 @@ function fromContrato(c: Contrato): Record<string, unknown> {
 }
 
 // ── Orcamento ─────────────────────────────────────────────────────────────────
-function toItemOrcamento(r: Record<string, unknown>): ItemOrcamento {
+function toItemOrcamento(r: ItemOrcamentoRow): ItemOrcamento {
   return {
-    id: r.id as string, descricao: r.descricao as string,
-    quantidade: Number(r.quantidade), valorUnitario: Number(r.valor_unitario),
+    id: r.id, descricao: r.descricao,
+    quantidade: r.quantidade, valorUnitario: r.valor_unitario,
   };
 }
-function toOrcamento(r: Record<string, unknown>): Orcamento {
-  const itensRaw = r.itens as Record<string, unknown>[] | null;
+function toOrcamento(r: OrcamentoRow): Orcamento {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    numero: r.numero as string,
-    titulo: ou(r.titulo as string),
-    tipoVestido: ou(r.tipo_vestido as string),
-    data: r.data as string,
-    validade: (r.validade as string) ?? '', itens: (itensRaw ?? []).map(toItemOrcamento),
-    desconto: Number(r.desconto ?? 0), status: r.status as Orcamento['status'],
-    observacoes: ou(r.observacoes as string),
-    custos: r.custos ? (r.custos as Orcamento['custos']) : undefined,
-    margemLucro: num(r.margem_lucro),
-    createdAt: r.created_at as string,
+    id: r.id, clienteId: r.cliente_id,
+    numero: r.numero,
+    titulo: ou(r.titulo),
+    tipoVestido: ou(r.tipo_vestido),
+    data: r.data,
+    validade: r.validade ?? '', itens: (r.itens ?? []).map(toItemOrcamento),
+    desconto: r.desconto ?? 0, status: r.status as Orcamento['status'],
+    observacoes: ou(r.observacoes),
+    custos: r.custos ? (JSON.parse(r.custos) as Orcamento['custos']) : undefined,
+    margemLucro: n(r.margem_lucro),
+    createdAt: r.created_at,
   };
 }
-function fromOrcamento(o: Omit<Orcamento, 'itens'>): Record<string, unknown> {
+function fromOrcamento(o: Omit<Orcamento, 'itens'>): Partial<OrcamentoRow> {
   return {
     id: o.id, cliente_id: o.clienteId, numero: o.numero,
     titulo: o.titulo ?? null,
@@ -185,7 +190,7 @@ function fromOrcamento(o: Omit<Orcamento, 'itens'>): Record<string, unknown> {
     created_at: o.createdAt,
   };
 }
-function fromItemOrcamento(orcamentoId: string, i: ItemOrcamento): Record<string, unknown> {
+function fromItemOrcamento(orcamentoId: string, i: ItemOrcamento): Partial<ItemOrcamentoRow> {
   return {
     id: i.id, orcamento_id: orcamentoId,
     descricao: i.descricao, quantidade: i.quantidade, valor_unitario: i.valorUnitario,
@@ -193,16 +198,16 @@ function fromItemOrcamento(orcamentoId: string, i: ItemOrcamento): Record<string
 }
 
 // ── Agendamento ───────────────────────────────────────────────────────────────
-function toAgendamento(r: Record<string, unknown>): Agendamento {
+function toAgendamento(r: AgendamentoRow): Agendamento {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    tipo: r.tipo as Agendamento['tipo'], data: r.data as string,
-    hora: ((r.hora as string) ?? '').slice(0, 5), // 'HH:MM:SS' → 'HH:MM'
-    duracao: Number(r.duracao), descricao: ou(r.descricao as string),
-    status: r.status as Agendamento['status'], createdAt: r.created_at as string,
+    id: r.id, clienteId: r.cliente_id,
+    tipo: r.tipo as Agendamento['tipo'], data: r.data,
+    hora: (r.hora ?? '').slice(0, 5), // 'HH:MM:SS' → 'HH:MM'
+    duracao: r.duracao, descricao: ou(r.descricao),
+    status: r.status as Agendamento['status'], createdAt: r.created_at,
   };
 }
-function fromAgendamento(a: Agendamento): Record<string, unknown> {
+function fromAgendamento(a: Agendamento): Partial<AgendamentoRow> {
   return {
     id: a.id, cliente_id: a.clienteId, tipo: a.tipo, data: a.data,
     hora: a.hora, duracao: a.duracao, descricao: a.descricao ?? null,
@@ -211,17 +216,17 @@ function fromAgendamento(a: Agendamento): Record<string, unknown> {
 }
 
 // ── Pagamento ─────────────────────────────────────────────────────────────────
-function toPagamento(r: Record<string, unknown>): Pagamento {
+function toPagamento(r: PagamentoRow): Pagamento {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    contratoId: ou(r.contrato_id as string), descricao: r.descricao as string,
-    valor: Number(r.valor), data: r.data as string,
+    id: r.id, clienteId: r.cliente_id,
+    contratoId: ou(r.contrato_id), descricao: r.descricao,
+    valor: r.valor, data: r.data,
     tipo: r.tipo as Pagamento['tipo'], status: r.status as Pagamento['status'],
     formaPagamento: ou(r.forma_pagamento as Pagamento['formaPagamento']),
-    createdAt: r.created_at as string,
+    createdAt: r.created_at,
   };
 }
-function fromPagamento(p: Pagamento): Record<string, unknown> {
+function fromPagamento(p: Pagamento): Partial<PagamentoRow> {
   return {
     id: p.id, cliente_id: p.clienteId, contrato_id: p.contratoId ?? null,
     descricao: p.descricao, valor: p.valor, data: p.data, tipo: p.tipo,
@@ -231,21 +236,21 @@ function fromPagamento(p: Pagamento): Record<string, unknown> {
 }
 
 // ── ParcelaProva ──────────────────────────────────────────────────────────────
-function toParcelaProva(r: Record<string, unknown>): ParcelaProva {
+function toParcelaProva(r: ParcelaProvaRow): ParcelaProva {
   return {
-    id: r.id as string, contratoId: r.contrato_id as string,
-    clienteId: r.cliente_id as string, numero: Number(r.numero),
-    dataProva: ou(r.data_prova as string),
-    horaProva: r.hora_prova ? ((r.hora_prova as string)).slice(0, 5) : undefined,
+    id: r.id, contratoId: r.contrato_id,
+    clienteId: r.cliente_id, numero: r.numero,
+    dataProva: ou(r.data_prova),
+    horaProva: r.hora_prova ? r.hora_prova.slice(0, 5) : undefined,
     statusProva: r.status_prova as ParcelaProva['statusProva'],
-    valorParcela: Number(r.valor_parcela), valorPago: num(r.valor_pago),
-    pago: Boolean(r.pago), dataPagamento: ou(r.data_pagamento as string),
+    valorParcela: r.valor_parcela, valorPago: n(r.valor_pago),
+    pago: r.pago, dataPagamento: ou(r.data_pagamento),
     formaPagamento: ou(r.forma_pagamento as ParcelaProva['formaPagamento']),
-    observacoes: ou(r.observacoes as string), pagamentoId: ou(r.pagamento_id as string),
-    createdAt: r.created_at as string,
+    observacoes: ou(r.observacoes), pagamentoId: ou(r.pagamento_id),
+    createdAt: r.created_at,
   };
 }
-function fromParcelaProva(p: ParcelaProva): Record<string, unknown> {
+function fromParcelaProva(p: ParcelaProva): Partial<ParcelaProvaRow> {
   return {
     id: p.id, contrato_id: p.contratoId, cliente_id: p.clienteId,
     numero: p.numero, data_prova: p.dataProva ?? null, hora_prova: p.horaProva ?? null,
@@ -257,16 +262,16 @@ function fromParcelaProva(p: ParcelaProva): Record<string, unknown> {
 }
 
 // ── Inspiracao ────────────────────────────────────────────────────────────────
-function toInspiracao(r: Record<string, unknown>): Inspiracao {
+function toInspiracao(r: InspiacaoRow): Inspiracao {
   return {
-    id: r.id as string, clienteId: r.cliente_id as string,
-    titulo: r.titulo as string, imagemBase64: ou(r.imagem_base64 as string),
-    imagemUrl: ou(r.imagem_url as string), categoria: r.categoria as Inspiracao['categoria'],
-    observacoes: ou(r.observacoes as string), favorito: Boolean(r.favorito),
-    createdAt: r.created_at as string,
+    id: r.id, clienteId: r.cliente_id,
+    titulo: r.titulo, imagemBase64: ou(r.imagem_base64),
+    imagemUrl: ou(r.imagem_url), categoria: r.categoria as Inspiracao['categoria'],
+    observacoes: ou(r.observacoes), favorito: r.favorito,
+    createdAt: r.created_at,
   };
 }
-function fromInspiracao(i: Inspiracao): Record<string, unknown> {
+function fromInspiracao(i: Inspiracao): Partial<InspiacaoRow> {
   return {
     id: i.id, cliente_id: i.clienteId, titulo: i.titulo,
     imagem_base64: i.imagemBase64 ?? null, imagem_url: i.imagemUrl ?? null,
@@ -283,7 +288,7 @@ export const clienteDb = {
   getAll: async (): Promise<Cliente[]> => {
     const { data, error } = await supabase.from('clientes').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toCliente(r as Record<string, unknown>));
+    return ((data ?? []) as ClienteRow[]).map(toCliente);
   },
   save: async (item: Cliente): Promise<void> => {
     const { error } = await supabase.from('clientes').upsert(fromCliente(item));
@@ -299,7 +304,7 @@ export const medidasDb = {
   getAll: async (): Promise<MedidasNoiva[]> => {
     const { data, error } = await supabase.from('medidas_noiva').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toMedidas(r as Record<string, unknown>));
+    return ((data ?? []) as MedidasRow[]).map(toMedidas);
   },
   save: async (item: MedidasNoiva): Promise<void> => {
     const { error } = await supabase.from('medidas_noiva').upsert(fromMedidas(item));
@@ -315,7 +320,7 @@ export const fichaDb = {
   getAll: async (): Promise<FichaTecnica[]> => {
     const { data, error } = await supabase.from('fichas_tecnicas').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toFicha(r as Record<string, unknown>));
+    return ((data ?? []) as FichaRow[]).map(toFicha);
   },
   save: async (item: FichaTecnica): Promise<void> => {
     const { error } = await supabase.from('fichas_tecnicas').upsert(fromFicha(item));
@@ -331,7 +336,7 @@ export const contratoDb = {
   getAll: async (): Promise<Contrato[]> => {
     const { data, error } = await supabase.from('contratos').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toContrato(r as Record<string, unknown>));
+    return ((data ?? []) as ContratoRow[]).map(toContrato);
   },
   save: async (item: Contrato): Promise<void> => {
     const { error } = await supabase.from('contratos').upsert(fromContrato(item));
@@ -350,7 +355,7 @@ export const orcamentoDb = {
       .select('*, itens:orcamento_itens(*)')
       .order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toOrcamento(r as Record<string, unknown>));
+    return ((data ?? []) as OrcamentoRow[]).map(toOrcamento);
   },
   save: async (item: Orcamento): Promise<void> => {
     const { itens, ...orc } = item;
@@ -375,7 +380,7 @@ export const agendamentoDb = {
   getAll: async (): Promise<Agendamento[]> => {
     const { data, error } = await supabase.from('agendamentos').select('*').order('data');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toAgendamento(r as Record<string, unknown>));
+    return ((data ?? []) as AgendamentoRow[]).map(toAgendamento);
   },
   save: async (item: Agendamento): Promise<void> => {
     const { error } = await supabase.from('agendamentos').upsert(fromAgendamento(item));
@@ -391,7 +396,7 @@ export const pagamentoDb = {
   getAll: async (): Promise<Pagamento[]> => {
     const { data, error } = await supabase.from('pagamentos').select('*').order('data');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toPagamento(r as Record<string, unknown>));
+    return ((data ?? []) as PagamentoRow[]).map(toPagamento);
   },
   save: async (item: Pagamento): Promise<void> => {
     const { error } = await supabase.from('pagamentos').upsert(fromPagamento(item));
@@ -407,13 +412,13 @@ export const parcelaProvaDb = {
   getAll: async (): Promise<ParcelaProva[]> => {
     const { data, error } = await supabase.from('parcelas_prova').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toParcelaProva(r as Record<string, unknown>));
+    return ((data ?? []) as ParcelaProvaRow[]).map(toParcelaProva);
   },
   getByContrato: async (contratoId: string): Promise<ParcelaProva[]> => {
     const { data, error } = await supabase
       .from('parcelas_prova').select('*').eq('contrato_id', contratoId);
     if (error) throw error;
-    return (data ?? []).map((r: any) => toParcelaProva(r as Record<string, unknown>));
+    return ((data ?? []) as ParcelaProvaRow[]).map(toParcelaProva);
   },
   save: async (item: ParcelaProva): Promise<void> => {
     const { error } = await supabase.from('parcelas_prova').upsert(fromParcelaProva(item));
@@ -433,7 +438,7 @@ export const inspiracaoDb = {
   getAll: async (): Promise<Inspiracao[]> => {
     const { data, error } = await supabase.from('inspiracoes').select('*').order('created_at');
     if (error) throw error;
-    return (data ?? []).map((r: any) => toInspiracao(r as Record<string, unknown>));
+    return ((data ?? []) as InspiacaoRow[]).map(toInspiracao);
   },
   save: async (item: Inspiracao): Promise<void> => {
     const { error } = await supabase.from('inspiracoes').upsert(fromInspiracao(item));
@@ -446,25 +451,25 @@ export const inspiracaoDb = {
 };
 
 // ── ConfigSistema ─────────────────────────────────────────────────────────────
-function toConfig(r: Record<string, unknown>): ConfigSistema {
-  const itensRaw = (r.itens_padrao ?? []) as Array<Record<string, unknown>>;
+function toConfig(r: ConfigRow): ConfigSistema {
+  const itensRaw = (r.itens_padrao ?? []) as ItemPadraoOrcamento[];
   return {
-    enderecoOrigem: (r.endereco_origem as string) ?? '',
-    nomeVeiculo: (r.nome_veiculo as string) ?? '',
-    valorVeiculo: Number(r.valor_veiculo ?? 0),
-    vidaUtilKm: Number(r.vida_util_km ?? 150000),
-    consumoKmL: Number(r.consumo_km_l ?? 12),
-    precoCombustivel: Number(r.preco_combustivel ?? 6.5),
-    custoManutencaoKm: Number(r.custo_manutencao_km ?? 0.1),
+    enderecoOrigem: r.endereco_origem ?? '',
+    nomeVeiculo: r.nome_veiculo ?? '',
+    valorVeiculo: r.valor_veiculo ?? 0,
+    vidaUtilKm: r.vida_util_km ?? 150000,
+    consumoKmL: r.consumo_km_l ?? 12,
+    precoCombustivel: r.preco_combustivel ?? 6.5,
+    custoManutencaoKm: r.custo_manutencao_km ?? 0.1,
     itensPadraoOrcamento: itensRaw.map(i => ({
-      id: i.id as string,
-      descricao: i.descricao as string,
+      id: i.id,
+      descricao: i.descricao,
       quantidade: Number(i.quantidade),
-      valorUnitario: Number(i.valorUnitario ?? i.valor_unitario ?? 0),
-    })) as ItemPadraoOrcamento[],
+      valorUnitario: Number(i.valorUnitario ?? 0),
+    })),
   };
 }
-function fromConfig(c: ConfigSistema): Record<string, unknown> {
+function fromConfig(c: ConfigSistema): Partial<ConfigRow> {
   return {
     id: 'singleton',
     endereco_origem: c.enderecoOrigem,
@@ -485,7 +490,7 @@ export const configDb = {
       .from('config_sistema').select('*').eq('id', 'singleton').maybeSingle();
     if (error) throw error;
     if (!data) return { ...defaultConfig };
-    return toConfig(data as Record<string, unknown>);
+    return toConfig(data as ConfigRow);
   },
   save: async (cfg: ConfigSistema): Promise<void> => {
     const { error } = await supabase.from('config_sistema').upsert(fromConfig(cfg));
