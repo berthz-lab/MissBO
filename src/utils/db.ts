@@ -50,7 +50,7 @@ function fromCliente(c: Cliente): Record<string, unknown> {
   return {
     id: c.id, nome: c.nome, telefone: c.telefone,
     email: c.email || null, cpf: c.cpf ?? null,
-    data_contato: c.dataContato, data_casamento: c.dataCasamento ?? null,
+    data_contato: c.dataContato, data_casamento: c.dataCasamento || null,
     local: c.local ?? null, endereco: c.endereco ?? null,
     distancia_km: c.distanciaKm ?? null, instagram: c.instagram ?? null, indicacao: c.indicacao ?? null,
     status: c.status, observacoes: c.observacoes ?? null,

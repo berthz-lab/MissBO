@@ -13,6 +13,7 @@ import { Agenda } from './pages/Agenda';
 import { Financeiro } from './pages/Financeiro';
 import { Inspiracoes } from './pages/Inspiracoes';
 import { Configuracoes } from './pages/Configuracoes';
+import { FichasTecnicas } from './pages/FichasTecnicas';
 import logoEscuroCentro from './assets/logo-escuro-centro.png';
 
 function LoadingScreen() {
@@ -59,6 +60,7 @@ function AppRoutes() {
       <Route path="/orcamentos"     element={<PrivateRoute><Orcamentos /></PrivateRoute>} />
       <Route path="/agenda"         element={<PrivateRoute><Agenda /></PrivateRoute>} />
       <Route path="/financeiro"     element={<PrivateRoute><Financeiro /></PrivateRoute>} />
+      <Route path="/fichas-tecnicas" element={<PrivateRoute><FichasTecnicas /></PrivateRoute>} />
       <Route path="/inspiracoes"    element={<PrivateRoute><Inspiracoes /></PrivateRoute>} />
       <Route path="/configuracoes"  element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
       <Route path="*" element={<Navigate to={isLoggedIn ? '/dashboard' : '/login'} replace />} />

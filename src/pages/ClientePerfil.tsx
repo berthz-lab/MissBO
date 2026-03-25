@@ -5,7 +5,7 @@ import {
   FileText, Receipt, BarChart3, Image, Ruler, Clock, CheckCircle2,
   Save, X, Printer, Upload, Star, ChevronRight, AlertCircle,
   Scissors, DollarSign, AlertTriangle, CalendarDays, Navigation, Car, Fuel,
-  Instagram,
+  Instagram, ClipboardList,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { genId } from '../utils/storage';
@@ -131,7 +131,7 @@ const grupoColors: Record<string, string> = {
 };
 
 /* ─────────────────────────────────────────────────────────────── */
-type Tab = 'info' | 'medidas' | 'contratos' | 'orcamentos' | 'provas' | 'agenda' | 'financeiro' | 'inspiracoes';
+type Tab = 'info' | 'medidas' | 'fichas' | 'contratos' | 'orcamentos' | 'provas' | 'agenda' | 'financeiro' | 'inspiracoes';
 
 export function ClientePerfil() {
   const { id } = useParams<{ id: string }>();
@@ -199,6 +199,7 @@ export function ClientePerfil() {
   /* ── data ──────────────────────────────────────────────────────── */
   const medidas    = app.getMedidasByCliente(id!);
   const contratos  = app.getContratosByCliente(id!);
+  const fichas     = app.getFichasByCliente(id!);
   const orcamentos = app.getOrcamentosByCliente(id!);
   const agendamentos = app.getAgendamentosByCliente(id!);
   const pagamentos = app.getPagamentosByCliente(id!);
@@ -572,6 +573,7 @@ export function ClientePerfil() {
   const tabs: { key: Tab; label: string; icon: React.ReactNode; count?: number; alert?: boolean }[] = [
     { key: 'info',        label: 'Informações', icon: <FileText size={15} /> },
     { key: 'medidas',     label: 'Medidas',     icon: <Ruler size={15} />,         count: medidas.length },
+    { key: 'fichas',      label: 'Fichas',      icon: <ClipboardList size={15} />,   count: fichas.length },
     { key: 'contratos',   label: 'Contratos',   icon: <FileText size={15} />,       count: contratos.length },
     { key: 'orcamentos',  label: 'Orçamentos',  icon: <Receipt size={15} />,        count: orcamentos.length },
     { key: 'provas',      label: 'Provas',      icon: <Scissors size={15} />,       count: parcelasProva.length, alert: provasAtrasadas.length > 0 },
@@ -874,6 +876,51 @@ export function ClientePerfil() {
                 </div>
               );
             })
+          }
+        </div>
+      )}
+
+      {/* ══ TAB: Fichas Técnicas ══════════════════════════════════ */}
+      {tab === 'fichas' && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>Fichas Técnicas</h2>
+            <button onClick={() => navigate(`/fichas-tecnicas?novo=${id}`)} className="btn-primary text-sm"><Plus size={14}/> Nova Ficha</button>
+          </div>
+          {fichas.length === 0
+            ? <EmptyState icon={<ClipboardList size={32}/>} text="Nenhuma ficha técnica cadastrada" action={<button onClick={() => navigate(`/fichas-tecnicas?novo=${id}`)} className="btn-primary mt-3 text-sm"><Plus size={14}/>Criar Ficha</button>}/>
+            : <div className="space-y-4">
+                {fichas.map(f => {
+                  const statusColors: Record<string, string> = {
+                    aguardando: 'gray', em_corte: 'yellow', costura: 'blue',
+                    prova: 'purple', ajuste: 'rose', concluida: 'green',
+                  };
+                  const statusLabels: Record<string, string> = {
+                    aguardando: 'Aguardando', em_corte: 'Em Corte', costura: 'Costura',
+                    prova: 'Prova', ajuste: 'Ajuste', concluida: 'Concluída',
+                  };
+                  return (
+                    <div key={f.id} className="border border-gray-100 rounded-2xl p-5 hover:border-gray-200 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-bold text-brand-charcoal">{f.nomePeca}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500 capitalize">{f.categoria.replace('_', ' ')}</span>
+                            <Badge variant={(statusColors[f.status] || 'gray') as any}>{statusLabels[f.status] || f.status}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid sm:grid-cols-4 gap-3 text-sm">
+                        {f.tecido && <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">Tecido</p><p className="font-semibold text-brand-charcoal">{f.tecido}</p></div>}
+                        {f.cor && <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">Cor</p><p className="font-semibold text-brand-charcoal">{f.cor}</p></div>}
+                        {f.dataEntrega && <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">Entrega</p><p className="font-semibold text-brand-charcoal">{fmt(f.dataEntrega)}</p></div>}
+                        {(f.valorVenda != null && Number(f.valorVenda) > 0) && <div className="bg-gray-50 rounded-xl p-3"><p className="text-xs text-gray-400 mb-1">Valor</p><p className="font-bold text-emerald-700">{fmtMoney(Number(f.valorVenda))}</p></div>}
+                      </div>
+                      {f.observacoes && <p className="text-xs text-gray-500 mt-3 bg-gray-50 rounded-lg p-3">{f.observacoes}</p>}
+                    </div>
+                  );
+                })}
+              </div>
           }
         </div>
       )}

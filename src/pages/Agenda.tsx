@@ -195,17 +195,17 @@ export function Agenda() {
       )}
 
       {/* Toggle de visualização */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
           <button
             onClick={() => setView('calendario')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all ${view === 'calendario' ? 'bg-brand-black text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-all ${view === 'calendario' ? 'bg-brand-black text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <Grid size={15} /> Calendário
           </button>
           <button
             onClick={() => setView('lista')}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all ${view === 'lista' ? 'bg-brand-black text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-all ${view === 'lista' ? 'bg-brand-black text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <List size={15} /> Lista
           </button>
@@ -222,13 +222,13 @@ export function Agenda() {
                 <button
                   key={v.key}
                   onClick={() => setListFilter(v.key as typeof listFilter)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${listFilter === v.key ? 'bg-brand-black text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${listFilter === v.key ? 'bg-brand-black text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
                   {v.label}
                 </button>
               ))}
             </div>
-            <div className="relative flex-1">
+            <div className="relative w-full sm:w-auto sm:flex-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input className="input-field pl-9" placeholder="Buscar cliente..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>

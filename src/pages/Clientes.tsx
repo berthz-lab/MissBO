@@ -148,7 +148,7 @@ export function Clientes() {
                     <span className="truncate" title={c.email}>{c.email}</span>
                   </div>
                 )}
-                {c.dataCasamento && (
+                {c.dataCasamento?.trim() && (
                   <div className="flex items-center gap-2">
                     <Heart size={13} className="text-brand-silver flex-shrink-0" />
                     <span>{format(parseISO(c.dataCasamento), "dd/MM/yyyy")}</span>

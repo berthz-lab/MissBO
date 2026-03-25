@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Ruler, FileText,
   Receipt, Calendar, BarChart3, Image, LogOut, Menu, X, ChevronRight, Settings,
-  AlertCircle, CheckCircle2, Moon, Sun,
+  AlertCircle, CheckCircle2, Moon, Sun, ClipboardList,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../hooks/useTheme';
@@ -18,6 +18,7 @@ const navItems = [
   { to: '/contratos',      icon: FileText,        label: 'Contratos' },
   { to: '/orcamentos',     icon: Receipt,         label: 'Orçamentos' },
   { to: '/agenda',         icon: Calendar,        label: 'Agenda de Provas' },
+  { to: '/fichas-tecnicas', icon: ClipboardList,  label: 'Fichas Técnicas' },
   { to: '/financeiro',     icon: BarChart3,       label: 'Financeiro' },
   { to: '/inspiracoes',    icon: Image,           label: 'Painel de Inspiração' },
   { to: '/configuracoes',  icon: Settings,        label: 'Configurações' },

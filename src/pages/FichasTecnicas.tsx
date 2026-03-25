@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, ClipboardList } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { FichaTecnica } from '../types';
@@ -40,6 +41,7 @@ const emptyFicha = {
 
 export function FichasTecnicas() {
   const { clientes, fichasTecnicas, saveFicha, deleteFicha } = useApp();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [clienteFilter, setClienteFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -49,6 +51,15 @@ export function FichasTecnicas() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
+
+  // Auto-open with pre-selected client from ?novo={clienteId}
+  useEffect(() => {
+    const novoClienteId = searchParams.get('novo');
+    if (novoClienteId && clientes.find(c => c.id === novoClienteId)) {
+      openNew(novoClienteId);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, clientes]);
 
   const filtered = fichasTecnicas.filter(f => {
     const cliente = getCliente(f.clienteId);
@@ -60,9 +71,9 @@ export function FichasTecnicas() {
     return matchSearch && matchCliente && matchStatus;
   });
 
-  const openNew = () => {
+  const openNew = (prefillClienteId?: string) => {
     setEditingFicha(null);
-    setForm({ ...emptyFicha });
+    setForm({ ...emptyFicha, clienteId: prefillClienteId || '' });
     setModalOpen(true);
   };
 
@@ -117,7 +128,7 @@ export function FichasTecnicas() {
           <h1 className="section-title">Fichas Técnicas</h1>
           <p className="text-gray-500 text-sm mt-1">{fichasTecnicas.length} fichas cadastradas</p>
         </div>
-        <button className="btn-primary" onClick={openNew}>
+        <button className="btn-primary" onClick={() => openNew()}>
           <Plus size={16} /> Nova Ficha
         </button>
       </div>
