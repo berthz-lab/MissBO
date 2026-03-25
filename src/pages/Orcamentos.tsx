@@ -11,14 +11,18 @@ import { format, parseISO } from 'date-fns';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
-const TIPOS_VESTIDO = [
-  { value: 'noiva',     label: 'Noiva',               atendimento: 150 },
-  { value: 'civil',     label: 'Civil',                atendimento: 100 },
-  { value: 'madrinha',  label: 'Madrinha',             atendimento: 80  },
-  { value: 'mae_noiva', label: 'Mãe de noiva/noivo',   atendimento: 80  },
-  { value: 'social',    label: 'Social',               atendimento: 70  },
-  { value: 'formatura', label: 'Formatura',            atendimento: 70  },
-  { value: 'criativo',  label: 'Criativo',             atendimento: 90  },
+const TIPOS_VESTIDO: {
+  value: string; label: string;
+  atendimento: number; costura?: number;
+  assinaturaContrato?: number; entrega?: number;
+}[] = [
+  { value: 'noiva',     label: 'Noiva',             atendimento: 300, costura: 500, assinaturaContrato: 350, entrega: 150 },
+  { value: 'civil',     label: 'Civil',              atendimento: 100 },
+  { value: 'madrinha',  label: 'Madrinha',           atendimento: 80  },
+  { value: 'mae_noiva', label: 'Mãe de noiva/noivo', atendimento: 80  },
+  { value: 'social',    label: 'Social',             atendimento: 70  },
+  { value: 'formatura', label: 'Formatura',          atendimento: 70  },
+  { value: 'criativo',  label: 'Criativo',           atendimento: 90  },
 ];
 
 const DIFICULDADES = [
@@ -30,10 +34,10 @@ const DIFICULDADES = [
 
 const TAMANHOS_CAPA: { value: TamanhoCapaVestido; label: string; preco: number }[] = [
   { value: '',   label: 'Sem capa',            preco: 0   },
-  { value: 'P',  label: 'P — Curta (até 1m)',  preco: 150 },
-  { value: 'M',  label: 'M — Média (até 2m)',  preco: 250 },
-  { value: 'G',  label: 'G — Longa (até 3m)',  preco: 400 },
-  { value: 'GG', label: 'GG — Cauda (4m+)',    preco: 600 },
+  { value: 'P',  label: 'P — Curta (até 1m)',  preco: 40  },
+  { value: 'M',  label: 'M — Média (até 2m)',  preco: 60  },
+  { value: 'G',  label: 'G — Longa (até 3m)',  preco: 80  },
+  { value: 'GG', label: 'GG — Cauda (4m+)',    preco: 120 },
 ];
 
 const STATUS_ORC = [
@@ -56,7 +60,8 @@ const EMPTY_FORM = {
   aviamentos:          '0',
   bordado:             '0',
   costura:             '0',
-  dificuldade:         'medio',
+  costuraBase:         '0',  // valor sem modificador de dificuldade
+  dificuldade:         'facil',
   atendimentoPorProva: '80',
   quantidadeProvas:    '1',
   assinaturaContrato:  '50',
@@ -70,6 +75,14 @@ const EMPTY_FORM = {
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const DIFICULDADE_MULT: Record<string, number> = {
+  facil: 1, medio: 1.25, dificil: 1.5, especialista: 2,
+};
+
+function applyDificuldade(base: number, dif: string): number {
+  return Math.round(base * (DIFICULDADE_MULT[dif] ?? 1) * 100) / 100;
+}
 
 function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
   const {
@@ -203,6 +216,7 @@ export function Orcamentos() {
         aviamentos:          o.custos.aviamentos.toString(),
         bordado:             o.custos.bordado.toString(),
         costura:             o.custos.costura.toString(),
+        costuraBase:         o.custos.costura.toString(),
         dificuldade:         o.custos.dificuldade,
         atendimentoPorProva: o.custos.atendimentoPorProva.toString(),
         quantidadeProvas:    o.custos.quantidadeProvas.toString(),
@@ -236,11 +250,33 @@ export function Orcamentos() {
 
   const handleTipoChange = (tipo: string) => {
     const t = TIPOS_VESTIDO.find(x => x.value === tipo);
-    setForm(prev => ({
-      ...prev,
-      tipoVestido: tipo,
-      atendimentoPorProva: t ? t.atendimento.toString() : prev.atendimentoPorProva,
-    }));
+    setForm(prev => {
+      if (!t) return { ...prev, tipoVestido: tipo };
+      const base = t.costura ?? Number(prev.costuraBase);
+      const costura = applyDificuldade(base, prev.dificuldade);
+      return {
+        ...prev,
+        tipoVestido:         tipo,
+        atendimentoPorProva: t.atendimento.toString(),
+        costuraBase:         base.toString(),
+        costura:             costura.toString(),
+        ...(t.assinaturaContrato !== undefined ? { assinaturaContrato: t.assinaturaContrato.toString() } : {}),
+        ...(t.entrega !== undefined            ? { entrega:             t.entrega.toString()            } : {}),
+      };
+    });
+  };
+
+  const handleDificuldadeChange = (dif: string) => {
+    setForm(prev => {
+      const base = Number(prev.costuraBase) || Number(prev.costura);
+      const costura = applyDificuldade(base, dif);
+      return {
+        ...prev,
+        dificuldade:  dif,
+        costuraBase:  base.toString(),
+        costura:      costura.toString(),
+      };
+    });
   };
 
   const handleCapaChange = (tam: string) => {
@@ -618,14 +654,23 @@ export function Orcamentos() {
               <div>
                 <label className="label">Costura / Mão de obra (R$)</label>
                 <input type="number" step="0.01" min="0" className="input-field"
-                       value={form.costura} onChange={setF('costura')} />
+                       value={form.costura}
+                       onChange={e => setForm(prev => ({
+                         ...prev,
+                         costura:     e.target.value,
+                         costuraBase: e.target.value,
+                       }))} />
               </div>
               <div className="col-span-2">
-                <label className="label">Dificuldade</label>
+                <label className="label">Dificuldade
+                  <span className="ml-2 normal-case font-normal text-gray-400">
+                    (afeta costura: Fácil ×1 · Médio ×1,25 · Difícil ×1,5 · Especialista ×2)
+                  </span>
+                </label>
                 <div className="grid grid-cols-4 gap-2">
                   {DIFICULDADES.map(d => (
                     <button key={d.value} type="button"
-                      onClick={() => setForm(prev => ({ ...prev, dificuldade: d.value }))}
+                      onClick={() => handleDificuldadeChange(d.value)}
                       className={`py-2 rounded-xl text-sm font-medium border transition-all ${
                         form.dificuldade === d.value
                           ? 'bg-brand-gold text-white border-rose-600'
