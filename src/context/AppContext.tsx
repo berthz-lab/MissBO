@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   Cliente, MedidasNoiva, FichaTecnica, Contrato,
   Orcamento, Agendamento, TipoAgendamento, Pagamento, Inspiracao, ParcelaProva,
@@ -30,7 +30,8 @@ interface AppContextType {
   custoPorKm: number;
   // Auth
   isLoggedIn: boolean;
-  login: (email: string, senha: string) => Promise<{ error: string | null }>;
+  login: (email: string, senha: string) => Promise<{ error: string | null; mfaRequired: boolean }>;
+  verifyOtpMfa: (code: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   // Valores ocultos
   valoresOcultos: boolean;
@@ -98,6 +99,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [valoresOcultos, setValoresOcultos] = useState(true);
   const toggleValores = useCallback(() => setValoresOcultos(v => !v), []);
+  // MFA: ref evita stale closure no onAuthStateChange
+  const mfaPendingRef = useRef(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const [config, setConfig] = useState<ConfigSistema>(configStorage.get());
 
   // ── Estado de dados ────────────────────────────────────────────────────────
@@ -188,6 +192,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (mfaPendingRef.current) return; // MFA em andamento — ignora eventos intermediários
       setIsLoggedIn(!!session);
       if (event === 'SIGNED_IN') loadAll().catch(console.error);
       if (event === 'SIGNED_OUT') {
@@ -227,12 +232,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   const login = useCallback(async (email: string, senha: string) => {
-    if (!isSupabaseConfigured) return { error: 'Supabase não configurado.' };
+    if (!isSupabaseConfigured) return { error: 'Supabase não configurado.', mfaRequired: false };
+
+    // Bloqueia onAuthStateChange antes do signIn para evitar loadAll precoce
+    mfaPendingRef.current = true;
+
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-    return { error: error?.message ?? null };
+    if (error) {
+      mfaPendingRef.current = false;
+      return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
+    }
+
+    // Senha correta → registra e-mail pendente, derruba sessão, envia OTP
+    setPendingEmail(email);
+    await supabase.auth.signOut();
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    if (otpError) {
+      mfaPendingRef.current = false;
+      return { error: 'Erro ao enviar código. Tente novamente.', mfaRequired: false };
+    }
+
+    return { error: null, mfaRequired: true };
   }, []);
 
+  const verifyOtpMfa = useCallback(async (code: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email: pendingEmail,
+      token: code,
+      type: 'email',
+    });
+    if (error) return { error: 'Código inválido ou expirado.' };
+
+    // OTP verificado — libera onAuthStateChange e carrega dados
+    mfaPendingRef.current = false;
+    setIsLoggedIn(true);
+    loadAll().catch(console.error);
+    return { error: null };
+  }, [pendingEmail, loadAll]);
+
   const logout = useCallback(async () => {
+    mfaPendingRef.current = false;
     if (isSupabaseConfigured) await supabase.auth.signOut();
     setIsLoggedIn(false);
   }, []);
@@ -260,7 +303,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading,
       toast, clearToast,
       config, saveConfig, custoPorKm,
-      isLoggedIn, login, logout, valoresOcultos, toggleValores,
+      isLoggedIn, login, verifyOtpMfa, logout, valoresOcultos, toggleValores,
       clientes, ...clienteSlice,
       medidas, fichasTecnicas, ...fichasSlice,
       contratos, ...contratoSlice,
