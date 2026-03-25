@@ -229,11 +229,11 @@ export function Clientes() {
               </select>
             </div>
             <div>
-              <label className="label">Data do Casamento</label>
+              <label className="label">Data do Evento</label>
               <input className="input-field" type="date" value={form.dataCasamento} onChange={f('dataCasamento')} />
             </div>
             <div>
-              <label className="label">Local do Casamento</label>
+              <label className="label">Cidade</label>
               <input className="input-field" placeholder="Nome do espaço" value={form.local} onChange={f('local')} />
             </div>
             <div>

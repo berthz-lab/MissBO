@@ -42,6 +42,10 @@ const tiposAg: { value: TipoAgendamento; label: string }[] = [
   { value: 'consulta',       label: 'Consulta Inicial' },
   { value: 'primeira_prova', label: '1ª Prova' },
   { value: 'segunda_prova',  label: '2ª Prova' },
+  { value: 'terceira_prova', label: '3ª Prova' },
+  { value: 'quarta_prova',   label: '4ª Prova' },
+  { value: 'quinta_prova',   label: '5ª Prova' },
+  { value: 'sexta_prova',    label: '6ª Prova' },
   { value: 'prova_final',    label: 'Prova Final' },
   { value: 'ajuste',         label: 'Ajuste' },
   { value: 'entrega',        label: 'Entrega' },
@@ -210,7 +214,7 @@ export function ClientePerfil() {
   const diasEntrega = proximaEntrega
     ? differenceInDays(parseISO(proximaEntrega.dataEntrega), new Date())
     : null;
-  const tiposProvaAg: TipoAgendamento[] = ['primeira_prova', 'segunda_prova', 'prova_final', 'ajuste'];
+  const tiposProvaAg: TipoAgendamento[] = ['primeira_prova', 'segunda_prova', 'terceira_prova', 'quarta_prova', 'quinta_prova', 'sexta_prova', 'prova_final', 'ajuste'];
   const proximaProva = agendamentos
     .filter(a => tiposProvaAg.includes(a.tipo) && a.data >= hojeStr && a.status !== 'cancelado' && a.status !== 'concluido')
     .sort((a, b) => a.data.localeCompare(b.data))[0] ?? null;
@@ -739,8 +743,8 @@ export function ClientePerfil() {
               { label: 'Nome completo', value: cliente.nome },
               { label: 'CPF', value: cliente.cpf || '—' },
               { label: 'Data do 1º contato', value: fmt(cliente.dataContato) },
-              { label: 'Data do casamento', value: cliente.dataCasamento ? fmt(cliente.dataCasamento) : '—' },
-              { label: 'Local do casamento', value: cliente.local || '—' },
+              { label: 'Data do evento', value: cliente.dataCasamento ? fmt(cliente.dataCasamento) : '—' },
+              { label: 'Cidade', value: cliente.local || '—' },
               { label: 'Como nos conheceu', value: cliente.indicacao || '—' },
             ].map(({ label, value }) => (
               <div key={label} className="bg-gray-50 rounded-xl p-4">
@@ -879,7 +883,7 @@ export function ClientePerfil() {
         <div className="card">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>Contratos</h2>
-            <button onClick={openNewContrato} className="btn-primary text-sm"><Plus size={14}/> Novo</button>
+            <button onClick={() => navigate(`/contratos?novo=${id}`)} className="btn-primary text-sm"><Plus size={14}/> Novo</button>
           </div>
           {contratos.length === 0
             ? <EmptyState icon={<FileText size={32} />} text="Nenhum contrato cadastrado" action={<button onClick={openNewContrato} className="btn-primary mt-3 text-sm"><Plus size={14}/>Criar Contrato</button>} />
@@ -945,7 +949,7 @@ export function ClientePerfil() {
         <div className="card">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>Orçamentos</h2>
-            <button onClick={openNewOrc} className="btn-primary text-sm"><Plus size={14}/> Novo</button>
+            <button onClick={() => navigate(`/orcamentos?novo=${id}`)} className="btn-primary text-sm"><Plus size={14}/> Novo</button>
           </div>
           {orcamentos.length === 0
             ? <EmptyState icon={<Receipt size={32}/>} text="Nenhum orçamento gerado" action={<button onClick={openNewOrc} className="btn-primary mt-3 text-sm"><Plus size={14}/>Criar Orçamento</button>}/>
@@ -1484,14 +1488,15 @@ export function ClientePerfil() {
             <div className="col-span-2"><label className="label">Nome *</label><input className="input-field" value={clienteForm.nome || ''} onChange={e => setClienteForm(p => ({ ...p, nome: e.target.value }))}/></div>
             <div><label className="label">Telefone / WhatsApp</label><input className="input-field" value={clienteForm.telefone || ''} onChange={e => setClienteForm(p => ({ ...p, telefone: e.target.value }))}/></div>
             <div><label className="label">E-mail</label><input type="email" className="input-field" value={clienteForm.email || ''} onChange={e => setClienteForm(p => ({ ...p, email: e.target.value }))}/></div>
+            <div><label className="label">CPF</label><input className="input-field" placeholder="000.000.000-00" value={clienteForm.cpf || ''} onChange={e => setClienteForm(p => ({ ...p, cpf: e.target.value }))}/></div>
             <div><label className="label">Instagram</label><input className="input-field" placeholder="@usuario" value={clienteForm.instagram || ''} onChange={e => setClienteForm(p => ({ ...p, instagram: e.target.value }))}/></div>
-            <div><label className="label">Data do Casamento</label><input type="date" className="input-field" value={clienteForm.dataCasamento || ''} onChange={e => setClienteForm(p => ({ ...p, dataCasamento: e.target.value }))}/></div>
+            <div><label className="label">Data do Evento</label><input type="date" className="input-field" value={clienteForm.dataCasamento || ''} onChange={e => setClienteForm(p => ({ ...p, dataCasamento: e.target.value }))}/></div>
             <div><label className="label">Status</label>
               <select className="input-field" value={clienteForm.status || 'lead'} onChange={e => setClienteForm(p => ({ ...p, status: e.target.value as Cliente['status'] }))}>
                 {statusClienteOpt.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            <div><label className="label">Local do Casamento</label><input className="input-field" value={clienteForm.local || ''} onChange={e => setClienteForm(p => ({ ...p, local: e.target.value }))}/></div>
+            <div><label className="label">Cidade</label><input className="input-field" value={clienteForm.local || ''} onChange={e => setClienteForm(p => ({ ...p, local: e.target.value }))}/></div>
             <div><label className="label">Como nos conheceu</label><input className="input-field" value={clienteForm.indicacao || ''} onChange={e => setClienteForm(p => ({ ...p, indicacao: e.target.value }))}/></div>
             <div className="col-span-2"><label className="label">Endereço da cliente (para navegação)</label><input className="input-field" placeholder="Rua, Nº, Bairro, Cidade" value={clienteForm.endereco || ''} onChange={e => setClienteForm(p => ({ ...p, endereco: e.target.value }))}/></div>
             <div><label className="label">Distância do ateliê (km, ida)</label><input type="number" min="0" step="0.5" className="input-field" placeholder="Ex: 12" value={clienteForm.distanciaKm ?? ''} onChange={e => setClienteForm(p => ({ ...p, distanciaKm: e.target.value ? Number(e.target.value) : undefined }))}/></div>
@@ -1662,6 +1667,33 @@ export function ClientePerfil() {
             </div>
             <div className="col-span-2"><label className="label">Descrição</label><textarea className="input-field" rows={2} value={agForm.descricao || ''} onChange={e => setAgForm(p => ({ ...p, descricao: e.target.value }))}/></div>
           </div>
+
+          {/* Aviso: data no passado */}
+          {agForm.data && agForm.data < hojeStr && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs">
+              <AlertTriangle size={13} className="flex-shrink-0" />
+              A data selecionada já passou. Deseja agendar no passado mesmo assim?
+            </div>
+          )}
+
+          {/* Aviso: conflito de horário */}
+          {(() => {
+            const conflito = app.agendamentos.find(a =>
+              a.id !== editAg?.id &&
+              a.data === agForm.data &&
+              a.hora === agForm.hora &&
+              a.status !== 'cancelado',
+            );
+            if (!conflito) return null;
+            const cliConflito = app.getCliente(conflito.clienteId);
+            return (
+              <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+                <AlertTriangle size={13} className="flex-shrink-0" />
+                Conflito: <strong>{cliConflito?.nome || 'Cliente'}</strong> já está agendada neste mesmo horário ({conflito.hora}).
+              </div>
+            );
+          })()}
+
           <div className="flex gap-3 pt-2">
             <button onClick={() => setAgOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>
             <button onClick={saveAg} className="btn-primary flex-1 justify-center" disabled={!agForm.data}><Save size={14}/> Salvar</button>

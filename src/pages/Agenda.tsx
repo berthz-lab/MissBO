@@ -17,13 +17,17 @@ import { ptBR } from 'date-fns/locale';
 
 /* ── Constantes ─────────────────────────────────────────────────────── */
 const tiposAgendamento: { value: TipoAgendamento; label: string; color: string; dot: string }[] = [
-  { value: 'consulta',       label: 'Consulta Inicial', color: 'bg-blue-100 text-blue-800',   dot: 'bg-blue-500' },
-  { value: 'primeira_prova', label: '1ª Prova',         color: 'bg-brand-gold/15 text-brand-gold-d',   dot: 'bg-brand-gold' },
-  { value: 'segunda_prova',  label: '2ª Prova',         color: 'bg-purple-100 text-purple-800', dot: 'bg-purple-500' },
-  { value: 'prova_final',    label: 'Prova Final',      color: 'bg-amber-100 text-amber-800',  dot: 'bg-amber-500' },
-  { value: 'ajuste',         label: 'Ajuste',           color: 'bg-orange-100 text-orange-800',dot: 'bg-orange-500' },
-  { value: 'entrega',        label: 'Entrega',          color: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500' },
-  { value: 'reuniao',        label: 'Reunião',          color: 'bg-gray-100 text-gray-800',    dot: 'bg-gray-500' },
+  { value: 'consulta',       label: 'Consulta Inicial', color: 'bg-blue-100 text-blue-800',           dot: 'bg-blue-500' },
+  { value: 'primeira_prova', label: '1ª Prova',         color: 'bg-brand-gold/15 text-brand-gold-d',  dot: 'bg-brand-gold' },
+  { value: 'segunda_prova',  label: '2ª Prova',         color: 'bg-purple-100 text-purple-800',       dot: 'bg-purple-500' },
+  { value: 'terceira_prova', label: '3ª Prova',         color: 'bg-pink-100 text-pink-800',           dot: 'bg-pink-500' },
+  { value: 'quarta_prova',   label: '4ª Prova',         color: 'bg-indigo-100 text-indigo-800',       dot: 'bg-indigo-500' },
+  { value: 'quinta_prova',   label: '5ª Prova',         color: 'bg-teal-100 text-teal-800',           dot: 'bg-teal-500' },
+  { value: 'sexta_prova',    label: '6ª Prova',         color: 'bg-cyan-100 text-cyan-800',           dot: 'bg-cyan-500' },
+  { value: 'prova_final',    label: 'Prova Final',      color: 'bg-amber-100 text-amber-800',         dot: 'bg-amber-500' },
+  { value: 'ajuste',         label: 'Ajuste',           color: 'bg-orange-100 text-orange-800',       dot: 'bg-orange-500' },
+  { value: 'entrega',        label: 'Entrega',          color: 'bg-emerald-100 text-emerald-800',     dot: 'bg-emerald-500' },
+  { value: 'reuniao',        label: 'Reunião',          color: 'bg-gray-100 text-gray-800',           dot: 'bg-gray-500' },
 ];
 
 const statusAg = [
@@ -75,7 +79,7 @@ export function Agenda() {
     const d = parseISO(a.data);
     return (isToday(d) || (isAfter(d, today) && isBefore(d, addDays(today, 3))))
       && a.status !== 'cancelado' && a.status !== 'concluido'
-      && ['primeira_prova','segunda_prova','prova_final','ajuste'].includes(a.tipo);
+      && ['primeira_prova','segunda_prova','terceira_prova','quarta_prova','quinta_prova','sexta_prova','prova_final','ajuste'].includes(a.tipo);
   });
 
   /* Lista filtrada */

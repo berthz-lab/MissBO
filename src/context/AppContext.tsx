@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   Cliente, MedidasNoiva, FichaTecnica, Contrato,
-  Orcamento, Agendamento, Pagamento, Inspiracao, ParcelaProva,
+  Orcamento, Agendamento, TipoAgendamento, Pagamento, Inspiracao, ParcelaProva,
   ConfigSistema,
 } from '../types';
 import { configStorage, calcCustoPorKm, authStorage } from '../utils/storage';
@@ -109,8 +109,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         pagamentoDb.getAll(), parcelaProvaDb.getAll(), inspiracaoDb.getAll(),
         configDb.get(),
       ]);
+      // ── Reconciliação: cria agendamentos para provas com data que ainda não têm vínculo
+      const provaTipoMapArr: TipoAgendamento[] = [
+        'primeira_prova', 'segunda_prova', 'terceira_prova',
+        'quarta_prova', 'quinta_prova', 'sexta_prova',
+      ];
+      const provaTipoMap = (num: number): TipoAgendamento =>
+        num >= 1 && num <= 6 ? provaTipoMapArr[num - 1] : 'prova_final';
+      const agsMap = new Map(ags.map(a => [a.id, a]));
+      const novasAgs: Agendamento[] = [];
+      const agsToUpdate: Agendamento[] = [];
+      for (const p of parcelas) {
+        if (!p.dataProva) continue;
+        const agId = `ag-${p.id}`;
+        const existing = agsMap.get(agId);
+        const correctTipo = provaTipoMap(p.numero);
+        // Corrige tipo se mudou (ex: prova_final → terceira_prova)
+        if (existing && existing.tipo !== correctTipo) {
+          const fixed = { ...existing, tipo: correctTipo };
+          agsMap.set(agId, fixed);
+          agsToUpdate.push(fixed);
+          agendamentoDb.save(fixed).catch(console.error);
+        }
+        if (existing) continue; // já vinculado
+        const ag: Agendamento = {
+          id: agId,
+          clienteId: p.clienteId,
+          tipo: provaTipoMap(p.numero),
+          data: p.dataProva,
+          hora: p.horaProva || '10:00',
+          duracao: 60,
+          descricao: `${p.numero}ª Prova`,
+          status: p.statusProva === 'realizada' ? 'concluido'
+            : p.statusProva === 'cancelada' ? 'cancelado'
+            : 'agendado',
+          createdAt: new Date().toISOString(),
+        };
+        novasAgs.push(ag);
+        // Persiste no banco em background
+        agendamentoDb.save(ag).catch(console.error);
+      }
+      // Aplica correções de tipo nos agendamentos existentes
+      const updatedAgsMap = new Map(agsToUpdate.map(a => [a.id, a]));
+      const correctedAgs = ags.map(a => updatedAgsMap.get(a.id) || a);
+      const allAgs = [...correctedAgs, ...novasAgs];
+
       setClientes(cls); setMedidas(meds); setFichasTecnicas(fichas);
-      setContratos(conts); setOrcamentos(orcs); setAgendamentos(ags);
+      setContratos(conts); setOrcamentos(orcs); setAgendamentos(allAgs);
       setPagamentos(pags); setParcelasProva(parcelas); setInspiracoes(insps);
       setConfig(cfg); configStorage.save(cfg);
     } catch (err) {
@@ -252,13 +297,84 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ── Agendamentos ──────────────────────────────────────────────────────────
+  // Helper: mapeia número da prova para tipo de agendamento
+  const provaTipoArr: TipoAgendamento[] = [
+    'primeira_prova', 'segunda_prova', 'terceira_prova',
+    'quarta_prova', 'quinta_prova', 'sexta_prova',
+  ];
+  const provaTipo = (num: number): TipoAgendamento =>
+    num >= 1 && num <= 6 ? provaTipoArr[num - 1] : 'prova_final';
+
+  // Helper: verifica se um tipo é de prova
+  const isProvaTipo = (tipo: TipoAgendamento) =>
+    [...provaTipoArr, 'prova_final'].includes(tipo);
+
   const saveAgendamento = (a: Agendamento) => {
     setAgendamentos(prev => upsertArr(prev, a));
     bg(() => agendamentoDb.save(a));
+
+    // Sync: se o agendamento está vinculado a uma parcela de prova, atualiza a parcela
+    if (a.id.startsWith('ag-')) {
+      const parcelaId = a.id.slice(3);
+      const parcela = parcelasProva.find(p => p.id === parcelaId);
+      if (parcela) {
+        const updated: ParcelaProva = {
+          ...parcela,
+          dataProva: a.data,
+          horaProva: a.hora,
+          statusProva: a.status === 'cancelado' ? 'cancelada'
+            : a.status === 'concluido' ? 'realizada'
+            : a.data ? 'agendada' : 'pendente',
+        };
+        setParcelasProva(prev => upsertArr(prev, updated));
+        bg(() => parcelaProvaDb.save(updated));
+      }
+    } else if (isProvaTipo(a.tipo)) {
+      // Agendamento de prova criado pela Agenda (sem vínculo direto):
+      // tenta encontrar uma parcela pendente sem data para vincular
+      const parcelaSemData = parcelasProva.find(p =>
+        p.clienteId === a.clienteId && !p.dataProva &&
+        p.statusProva === 'pendente'
+      );
+      if (parcelaSemData) {
+        const updated: ParcelaProva = {
+          ...parcelaSemData,
+          dataProva: a.data,
+          horaProva: a.hora,
+          statusProva: 'agendada',
+        };
+        setParcelasProva(prev => upsertArr(prev, updated));
+        bg(() => parcelaProvaDb.save(updated));
+        // Renomeia o agendamento para vincular
+        const linked: Agendamento = { ...a, id: `ag-${parcelaSemData.id}` };
+        // Remove o antigo e salva o vinculado
+        setAgendamentos(prev => prev.filter(x => x.id !== a.id).concat(linked));
+        bg(async () => {
+          await agendamentoDb.delete(a.id);
+          await agendamentoDb.save(linked);
+        });
+      }
+    }
   };
   const deleteAgendamento = (id: string) => {
     setAgendamentos(prev => prev.filter(a => a.id !== id));
     bg(() => agendamentoDb.delete(id));
+
+    // Sync: se era um agendamento vinculado a prova, limpa a data da parcela
+    if (id.startsWith('ag-')) {
+      const parcelaId = id.slice(3);
+      const parcela = parcelasProva.find(p => p.id === parcelaId);
+      if (parcela && !parcela.pago) {
+        const updated: ParcelaProva = {
+          ...parcela,
+          dataProva: undefined,
+          horaProva: undefined,
+          statusProva: 'pendente',
+        };
+        setParcelasProva(prev => upsertArr(prev, updated));
+        bg(() => parcelaProvaDb.save(updated));
+      }
+    }
   };
   const getAgendamentosByCliente = (clienteId: string) => agendamentos.filter(a => a.clienteId === clienteId);
 
@@ -303,6 +419,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setParcelasProva(prev => upsertArr(prev, updated));
     bg(() => parcelaProvaDb.save(updated));
+
+    // Sync: cria/atualiza agendamento vinculado quando a parcela tem data
+    const agId = `ag-${updated.id}`;
+    if (updated.dataProva) {
+      const existingAg = agendamentos.find(a => a.id === agId);
+      const ag: Agendamento = {
+        id: agId,
+        clienteId: updated.clienteId,
+        tipo: provaTipo(updated.numero),
+        data: updated.dataProva,
+        hora: updated.horaProva || '10:00',
+        duracao: existingAg?.duracao || 60,
+        descricao: existingAg?.descricao || `${updated.numero}ª Prova`,
+        status: updated.statusProva === 'realizada' ? 'concluido'
+          : updated.statusProva === 'cancelada' ? 'cancelado'
+          : 'agendado',
+        createdAt: existingAg?.createdAt || new Date().toISOString(),
+      };
+      setAgendamentos(prev => upsertArr(prev, ag));
+      bg(() => agendamentoDb.save(ag));
+    } else {
+      // Se a data foi removida, deleta o agendamento vinculado
+      const existingAg = agendamentos.find(a => a.id === agId);
+      if (existingAg) {
+        setAgendamentos(prev => prev.filter(a => a.id !== agId));
+        bg(() => agendamentoDb.delete(agId));
+      }
+    }
   };
 
   const deleteParcelaProva = (id: string) => {
@@ -313,6 +457,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     setParcelasProva(prev => prev.filter(p => p.id !== id));
     bg(() => parcelaProvaDb.delete(id));
+    // Sync: deleta agendamento vinculado
+    const agId = `ag-${id}`;
+    const existingAg = agendamentos.find(a => a.id === agId);
+    if (existingAg) {
+      setAgendamentos(prev => prev.filter(a => a.id !== agId));
+      bg(() => agendamentoDb.delete(agId));
+    }
   };
   const getParcelasProvaByContrato = (contratoId: string) =>
     parcelasProva.filter(p => p.contratoId === contratoId);

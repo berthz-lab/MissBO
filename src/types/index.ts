@@ -157,6 +157,8 @@ export interface ItemOrcamento {
   valorUnitario: number;
 }
 
+export type TamanhoCapaVestido = '' | 'P' | 'M' | 'G' | 'GG';
+
 export interface CustosOrcamento {
   tecidos: number;
   aviamentos: number;
@@ -170,6 +172,8 @@ export interface CustosOrcamento {
   gasolina: number;
   entradaPct?: number;
   arredondarParcelas?: boolean;
+  tamanhoCapa?: TamanhoCapaVestido;
+  valorCapa?: number;
 }
 
 export interface Orcamento {
@@ -194,6 +198,10 @@ export type TipoAgendamento =
   | 'consulta'
   | 'primeira_prova'
   | 'segunda_prova'
+  | 'terceira_prova'
+  | 'quarta_prova'
+  | 'quinta_prova'
+  | 'sexta_prova'
   | 'prova_final'
   | 'ajuste'
   | 'entrega'

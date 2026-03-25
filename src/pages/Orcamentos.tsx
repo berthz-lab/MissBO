@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Trash2, Receipt, Printer, Edit2, Car, TrendingUp } from 'lucide-react';
 import { fmtMoney } from '../utils/format';
 import { useApp } from '../context/AppContext';
-import { Orcamento, CustosOrcamento, ItemOrcamento } from '../types';
+import { Orcamento, CustosOrcamento, ItemOrcamento, TamanhoCapaVestido } from '../types';
 import { genId } from '../utils/storage';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
@@ -25,6 +26,14 @@ const DIFICULDADES = [
   { value: 'medio',        label: 'Médio'       },
   { value: 'dificil',      label: 'Difícil'     },
   { value: 'especialista', label: 'Especialista' },
+];
+
+const TAMANHOS_CAPA: { value: TamanhoCapaVestido; label: string; preco: number }[] = [
+  { value: '',   label: 'Sem capa',            preco: 0   },
+  { value: 'P',  label: 'P — Curta (até 1m)',  preco: 150 },
+  { value: 'M',  label: 'M — Média (até 2m)',  preco: 250 },
+  { value: 'G',  label: 'G — Longa (até 3m)',  preco: 400 },
+  { value: 'GG', label: 'GG — Cauda (4m+)',    preco: 600 },
 ];
 
 const STATUS_ORC = [
@@ -56,6 +65,8 @@ const EMPTY_FORM = {
   margemLucro:         '30',
   desconto:            '0',
   entradaPct:          '30',
+  tamanhoCapa:         '',
+  valorCapa:           '0',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -65,9 +76,11 @@ function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
     tecidos, aviamentos, bordado, costura,
     atendimentoPorProva, quantidadeProvas,
     assinaturaContrato, entrega, gasolina,
+    valorCapa,
   } = custos;
+  const capaVal  = valorCapa || 0;
   const atTotal  = atendimentoPorProva * quantidadeProvas + assinaturaContrato + entrega;
-  const custoT   = tecidos + aviamentos + bordado + costura + atTotal + gasolina;
+  const custoT   = tecidos + aviamentos + bordado + costura + atTotal + gasolina + capaVal;
   const lucro    = Math.round(custoT * (margem / 100) * 100) / 100;
 
   const mk = (desc: string, val: number, qtd = 1): ItemOrcamento =>
@@ -78,6 +91,10 @@ function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
   if (aviamentos > 0)         items.push(mk('Aviamentos', aviamentos));
   if (bordado > 0)            items.push(mk('Bordado', bordado));
   if (costura > 0)            items.push(mk('Costura / Mão de obra', costura));
+  if (capaVal > 0) {
+    const capaLabel = TAMANHOS_CAPA.find(c => c.preco === capaVal)?.label || 'Capa do vestido';
+    items.push(mk(`Capa do vestido — ${capaLabel}`, capaVal));
+  }
   if (atendimentoPorProva > 0)
     items.push(mk(`Atendimento — ${quantidadeProvas} prova(s)`, atendimentoPorProva, quantidadeProvas));
   if (assinaturaContrato > 0) items.push(mk('Visita p/ assinatura do contrato', assinaturaContrato));
@@ -93,6 +110,7 @@ function buildItens(custos: CustosOrcamento, margem: number): ItemOrcamento[] {
 export function Orcamentos() {
   const { clientes, orcamentos, saveOrcamento, deleteOrcamento, nextNumeroOrcamento,
           custoPorKm, config } = useApp();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [search,        setSearch]        = useState('');
   const [modalOpen,     setModalOpen]     = useState(false);
@@ -102,6 +120,15 @@ export function Orcamentos() {
   const [arredondar,    setArredondar]    = useState(false);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
+
+  /* Auto-abrir modal via query param ?novo=clienteId */
+  useEffect(() => {
+    const novoClienteId = searchParams.get('novo');
+    if (novoClienteId && clientes.find(c => c.id === novoClienteId)) {
+      openNew(novoClienteId);
+      setSearchParams({}, { replace: true }); // limpa o param
+    }
+  }, [searchParams, clientes]);
 
   /* Auto-expirar */
   useEffect(() => {
@@ -124,7 +151,7 @@ export function Orcamentos() {
   const n = (k: keyof typeof EMPTY_FORM) => Number(form[k]) || 0;
   const atendimentoBase  = n('atendimentoPorProva') * n('quantidadeProvas');
   const atendimentoTotal = atendimentoBase + n('assinaturaContrato') + n('entrega');
-  const custoTotal       = n('tecidos') + n('aviamentos') + n('bordado') + n('costura') + atendimentoTotal + n('gasolina');
+  const custoTotal       = n('tecidos') + n('aviamentos') + n('bordado') + n('costura') + atendimentoTotal + n('gasolina') + n('valorCapa');
   const lucroValor       = Math.round(custoTotal * (n('margemLucro') / 100) * 100) / 100;
   const precoSugerido    = custoTotal + lucroValor;
   const totalFinal       = precoSugerido - n('desconto');
@@ -184,6 +211,8 @@ export function Orcamentos() {
         margemLucro:         (o.margemLucro ?? 30).toString(),
         desconto:            o.desconto.toString(),
         entradaPct:          (o.custos.entradaPct ?? 30).toString(),
+        tamanhoCapa:         o.custos.tamanhoCapa || '',
+        valorCapa:           (o.custos.valorCapa || 0).toString(),
       });
       setArredondar(o.custos.arredondarParcelas ?? false);
     } else {
@@ -213,6 +242,15 @@ export function Orcamentos() {
     }));
   };
 
+  const handleCapaChange = (tam: string) => {
+    const capa = TAMANHOS_CAPA.find(c => c.value === tam);
+    setForm(prev => ({
+      ...prev,
+      tamanhoCapa: tam,
+      valorCapa: capa ? capa.preco.toString() : '0',
+    }));
+  };
+
   const handleQtdProvasChange = (v: string) => {
     const gas = calcGasolina(form.clienteId, Number(v) || 1);
     setForm(prev => ({ ...prev, quantidadeProvas: v, gasolina: gas.toString() }));
@@ -234,6 +272,8 @@ export function Orcamentos() {
       gasolina:            n('gasolina'),
       entradaPct:          n('entradaPct'),
       arredondarParcelas:  arredondar,
+      tamanhoCapa:         (form.tamanhoCapa || '') as TamanhoCapaVestido,
+      valorCapa:           n('valorCapa'),
     };
     const itens = buildItens(custos, n('margemLucro'));
     const orc: Orcamento = {
@@ -272,10 +312,12 @@ export function Orcamentos() {
     if (o.custos) {
       const c   = o.custos;
       const m   = o.margemLucro ?? 0;
+      const capaVal = c.valorCapa || 0;
+      const capaLbl = c.tamanhoCapa ? (TAMANHOS_CAPA.find(x => x.value === c.tamanhoCapa)?.label || 'Capa') : '';
       const atT = c.atendimentoPorProva * c.quantidadeProvas + c.assinaturaContrato + c.entrega;
       const mat = c.tecidos + c.aviamentos + c.bordado;
       const serv = c.costura;
-      const cusT = mat + serv + atT + c.gasolina;
+      const cusT = mat + serv + atT + c.gasolina + capaVal;
       const lucro = Math.round(cusT * (m / 100) * 100) / 100;
       const preco = cusT + lucro;
       const final = preco - o.desconto;
@@ -283,6 +325,7 @@ export function Orcamentos() {
       const rows = [
         mat > 0   && `<tr><td>Materiais (tecidos, aviamentos, bordado)</td><td style="text-align:right;font-weight:500">${fmtMoney(mat)}</td></tr>`,
         serv > 0  && `<tr><td>Costura / Mão de obra${difLbl ? ` — ${difLbl}` : ''}</td><td style="text-align:right;font-weight:500">${fmtMoney(serv)}</td></tr>`,
+        capaVal > 0 && `<tr><td>Capa do vestido — ${capaLbl}</td><td style="text-align:right;font-weight:500">${fmtMoney(capaVal)}</td></tr>`,
         atT > 0   && `<tr><td>Atendimento (${c.quantidadeProvas} prova(s) + contrato + entrega)</td><td style="text-align:right;font-weight:500">${fmtMoney(atT)}</td></tr>`,
         c.gasolina > 0 && `<tr><td>Deslocamento</td><td style="text-align:right;font-weight:500">${fmtMoney(c.gasolina)}</td></tr>`,
       ].filter(Boolean).join('');
@@ -592,6 +635,42 @@ export function Orcamentos() {
                   ))}
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* ── Capa do Vestido ── */}
+          <section>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Capa do Vestido</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="label">Tamanho da Capa</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {TAMANHOS_CAPA.map(c => (
+                    <button key={c.value} type="button"
+                      onClick={() => handleCapaChange(c.value)}
+                      className={`py-2.5 rounded-xl text-xs font-medium border transition-all ${
+                        form.tamanhoCapa === c.value
+                          ? 'bg-brand-gold text-white border-rose-600'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                      }`}>
+                      {c.value || '—'}
+                      <span className="block text-[10px] mt-0.5 opacity-70">
+                        {c.preco > 0 ? fmtMoney(c.preco) : 'Nenhuma'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {form.tamanhoCapa && (
+                <div className="col-span-2">
+                  <label className="label">Valor da capa (R$)</label>
+                  <input type="number" step="0.01" min="0" className="input-field"
+                         value={form.valorCapa} onChange={setF('valorCapa')} />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Valor predefinido para {TAMANHOS_CAPA.find(c => c.value === form.tamanhoCapa)?.label}. Edite se necessário.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 

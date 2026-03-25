@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, FileText, Printer, Paperclip, X, Link2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Contrato } from '../types';
@@ -30,6 +31,7 @@ const emptyContrato = {
 
 export function Contratos() {
   const { clientes, contratos, orcamentos, saveContrato, deleteContrato, nextNumeroContrato } = useApp();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch]             = useState('');
   const [modalOpen, setModalOpen]       = useState(false);
   const [editingContrato, setEditingContrato] = useState<Contrato | null>(null);
@@ -51,12 +53,21 @@ export function Contratos() {
       cliente?.nome.toLowerCase().includes(search.toLowerCase());
   });
 
-  const openNew = () => {
+  const openNew = (prefillClienteId?: string) => {
     setEditingContrato(null);
-    setForm({ ...emptyContrato });
+    setForm({ ...emptyContrato, clienteId: prefillClienteId || '' });
     setAnexoBase64(undefined); setAnexoNome(undefined); setAnexoTipo(undefined);
     setModalOpen(true);
   };
+
+  /* Auto-abrir modal via query param ?novo=clienteId */
+  useEffect(() => {
+    const novoClienteId = searchParams.get('novo');
+    if (novoClienteId && clientes.find(c => c.id === novoClienteId)) {
+      openNew(novoClienteId);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, clientes]);
 
   const openEdit = (c: Contrato) => {
     setEditingContrato(c);
