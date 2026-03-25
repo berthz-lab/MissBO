@@ -42,8 +42,9 @@ function LoadingScreen() {
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, loading } = useApp();
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  // Enquanto Supabase verifica a sessão, exibe loading
   if (loading) return <LoadingScreen />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
   return <Layout>{children}</Layout>;
 }
 

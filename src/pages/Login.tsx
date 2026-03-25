@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import logoClaroCentro from '../assets/logo-claro-centro.png';
@@ -7,7 +6,7 @@ import logoEscuroCentro from '../assets/logo-escuro-centro.png';
 
 export function Login() {
   const { login } = useApp();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [showSenha, setShowSenha] = useState(false);
   const [error, setError] = useState('');
@@ -17,10 +16,12 @@ export function Login() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 500));
-    if (login(senha)) { navigate('/dashboard'); }
-    else { setError('Senha incorreta. Tente novamente.'); }
-    setLoading(false);
+    const { error: err } = await login(email, senha);
+    if (err) {
+      setError('E-mail ou senha incorretos. Tente novamente.');
+      setLoading(false);
+    }
+    // Se login OK, o onAuthStateChange no AppContext cuida do redirect via isLoggedIn
   };
 
   return (
@@ -28,12 +29,10 @@ export function Login() {
       {/* ── Left: dark brand panel ────────────── */}
       <div className="hidden lg:flex lg:w-[52%] relative flex-col items-center justify-center p-16 overflow-hidden"
            style={{ background: '#0A0A0A' }}>
-        {/* Decorative rings */}
         {[260, 400, 560].map((r, i) => (
           <div key={i} className="absolute rounded-full border border-white/5 pointer-events-none"
                style={{ width: r, height: r, top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
         ))}
-        {/* Gold horizontal line */}
         <div className="absolute top-1/2 w-full h-px pointer-events-none"
              style={{ background: 'linear-gradient(to right, transparent, rgba(201,169,110,0.25), transparent)' }} />
 
@@ -41,7 +40,6 @@ export function Login() {
           <div className="mb-16 flex justify-center">
             <img src={logoClaroCentro} alt="Miss Bô Ateliê" className="h-52 w-auto" />
           </div>
-
           <div className="space-y-4 text-left max-w-xs mx-auto">
             {[
               'Gestão completa de noivas',
@@ -68,7 +66,6 @@ export function Login() {
       {/* ── Right: form ───────────────────────── */}
       <div className="flex-1 flex items-center justify-center p-8" style={{ background: '#F5F3F0' }}>
         <div className="w-full max-w-sm">
-          {/* Mobile brand */}
           <div className="lg:hidden text-center mb-10">
             <img src={logoEscuroCentro} alt="Miss Bô Ateliê" className="h-32 w-auto mx-auto" />
           </div>
@@ -81,14 +78,21 @@ export function Login() {
               <h2 className="text-xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Bem-vinda de volta
               </h2>
-              <p className="text-sm text-gray-400 mt-1">Entre com sua senha para continuar</p>
+              <p className="text-sm text-gray-400 mt-1">Entre com seu e-mail e senha para continuar</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="label">Usuário</label>
-                <input type="text" value="missbo" readOnly
-                       className="input-field bg-gray-50 text-gray-400 cursor-not-allowed" />
+                <label className="label">E-mail</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError(''); }}
+                  placeholder="seu@email.com"
+                  className={`input-field ${error ? 'border-red-400' : ''}`}
+                  autoFocus
+                  autoComplete="email"
+                />
               </div>
 
               <div>
@@ -99,8 +103,8 @@ export function Login() {
                     value={senha}
                     onChange={e => { setSenha(e.target.value); setError(''); }}
                     placeholder="Digite sua senha"
-                    className={`input-field pr-12 ${error ? 'border-red-400 ring-2 ring-red-100' : ''}`}
-                    autoFocus
+                    className={`input-field pr-12 ${error ? 'border-red-400' : ''}`}
+                    autoComplete="current-password"
                   />
                   <button type="button" onClick={() => setShowSenha(!showSenha)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 transition-colors">
@@ -110,7 +114,7 @@ export function Login() {
                 {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
               </div>
 
-              <button type="submit" disabled={loading || !senha}
+              <button type="submit" disabled={loading || !email || !senha}
                       className="btn-primary w-full justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed">
                 {loading
                   ? <span className="inline-flex items-center gap-2">

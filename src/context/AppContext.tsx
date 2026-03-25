@@ -4,13 +4,13 @@ import {
   Orcamento, Agendamento, TipoAgendamento, Pagamento, Inspiracao, ParcelaProva,
   ConfigSistema,
 } from '../types';
-import { configStorage, calcCustoPorKm, authStorage } from '../utils/storage';
+import { configStorage, calcCustoPorKm } from '../utils/storage';
 import {
   clienteDb, medidasDb, fichaDb, contratoDb,
   orcamentoDb, agendamentoDb, pagamentoDb, inspiracaoDb,
   parcelaProvaDb, gerarParcelasDb, configDb, upsertArr,
 } from '../utils/db';
-import { isSupabaseConfigured } from '../utils/supabase';
+import { supabase, isSupabaseConfigured } from '../utils/supabase';
 
 interface AppContextType {
   loading: boolean;
@@ -22,8 +22,8 @@ interface AppContextType {
   custoPorKm: number;
   // Auth
   isLoggedIn: boolean;
-  login: (senha: string) => boolean;
-  logout: () => void;
+  login: (email: string, senha: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
   // Valores ocultos
   valoresOcultos: boolean;
   toggleValores: () => void;
@@ -85,7 +85,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ msg: string; type: 'error' | 'success' } | null>(null);
   const clearToast = () => setToast(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(authStorage.isLoggedIn());
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [valoresOcultos, setValoresOcultos] = useState(true);
   const toggleValores = useCallback(() => setValoresOcultos(v => !v), []);
   const [config, setConfig] = useState<ConfigSistema>(configStorage.get());
@@ -170,7 +170,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => { loadAll().catch(console.error); }, [loadAll]);
+  // ── Sessão Supabase ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setLoading(false); return; }
+
+    // Verifica sessão atual imediatamente
+    supabase.auth.getSession().then(({ data }) => {
+      const logged = !!data.session;
+      setIsLoggedIn(logged);
+      if (logged) loadAll().catch(console.error);
+      else setLoading(false);
+    });
+
+    // Escuta mudanças de sessão (login, logout, refresh de token)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const logged = !!session;
+      setIsLoggedIn(logged);
+      if (event === 'SIGNED_IN')  loadAll().catch(console.error);
+      if (event === 'SIGNED_OUT') {
+        setClientes([]); setMedidas([]); setFichasTecnicas([]);
+        setContratos([]); setOrcamentos([]); setAgendamentos([]);
+        setPagamentos([]); setParcelasProva([]); setInspiracoes([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadAll]);
 
   const saveConfig = (c: ConfigSistema) => {
     configStorage.save(c);
@@ -179,11 +204,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   const custoPorKm = calcCustoPorKm(config);
 
-  const login = (senha: string): boolean => {
-    if (senha === 'atelie2024') { authStorage.login(); setIsLoggedIn(true); return true; }
-    return false;
+  const login = async (email: string, senha: string): Promise<{ error: string | null }> => {
+    if (!isSupabaseConfigured) return { error: 'Supabase não configurado.' };
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (error) return { error: error.message };
+    return { error: null };
   };
-  const logout = () => { authStorage.logout(); setIsLoggedIn(false); };
+
+  const logout = async () => {
+    if (isSupabaseConfigured) await supabase.auth.signOut();
+    setIsLoggedIn(false);
+  };
 
   // ── Helpers internos ──────────────────────────────────────────────────────
   /** Executa operação no Supabase; em caso de erro, exibe toast e recarrega o estado */

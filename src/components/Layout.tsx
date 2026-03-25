@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout().then(() => navigate('/login')); };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

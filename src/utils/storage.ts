@@ -2,7 +2,6 @@ import { ConfigSistema, defaultConfig } from '../types';
 
 const KEYS = {
   config: 'atelie_config',
-  auth: 'atelie_auth',
 };
 
 export function genId(): string {
@@ -31,9 +30,3 @@ export function calcCustoPorKm(cfg: ConfigSistema): number {
   return depreciation + fuel + cfg.custoManutencaoKm;
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
-export const authStorage = {
-  isLoggedIn: (): boolean => localStorage.getItem(KEYS.auth) === 'true',
-  login: () => localStorage.setItem(KEYS.auth, 'true'),
-  logout: () => localStorage.removeItem(KEYS.auth),
-};
