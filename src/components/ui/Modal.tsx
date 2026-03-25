@@ -35,7 +35,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', footer }:
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full ${sizeClasses[size]} sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[100dvh] sm:max-h-[90vh] flex flex-col ${
+      <div className={`relative w-full ${sizeClasses[size]} sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85dvh] sm:max-h-[90vh] flex flex-col ${
         isDark ? 'bg-[#1E1E1E]' : 'bg-white'
       }`}>
         <div className={`flex items-center justify-between p-4 sm:p-6 border-b flex-shrink-0 ${

@@ -10,6 +10,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { genId } from '../utils/storage';
 import { fmtTelefone } from '../utils/format';
+import { formatCPF, formatPhone } from '../utils/validation';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import {
@@ -1534,9 +1535,9 @@ export function ClientePerfil() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2"><label className="label">Nome *</label><input className="input-field" value={clienteForm.nome || ''} onChange={e => setClienteForm(p => ({ ...p, nome: e.target.value }))}/></div>
-            <div><label className="label">Telefone / WhatsApp</label><input className="input-field" value={clienteForm.telefone || ''} onChange={e => setClienteForm(p => ({ ...p, telefone: e.target.value }))}/></div>
+            <div><label className="label">Telefone / WhatsApp</label><input className="input-field" value={clienteForm.telefone || ''} onChange={e => setClienteForm(p => ({ ...p, telefone: formatPhone(e.target.value) }))}/></div>
             <div><label className="label">E-mail</label><input type="email" className="input-field" value={clienteForm.email || ''} onChange={e => setClienteForm(p => ({ ...p, email: e.target.value }))}/></div>
-            <div><label className="label">CPF</label><input className="input-field" placeholder="000.000.000-00" value={clienteForm.cpf || ''} onChange={e => setClienteForm(p => ({ ...p, cpf: e.target.value }))}/></div>
+            <div><label className="label">CPF</label><input className="input-field" placeholder="000.000.000-00" value={clienteForm.cpf || ''} onChange={e => setClienteForm(p => ({ ...p, cpf: formatCPF(e.target.value) }))}/></div>
             <div><label className="label">Instagram</label><input className="input-field" placeholder="@usuario" value={clienteForm.instagram || ''} onChange={e => setClienteForm(p => ({ ...p, instagram: e.target.value }))}/></div>
             <div><label className="label">Data do Evento</label><input type="date" className="input-field" value={clienteForm.dataCasamento || ''} onChange={e => setClienteForm(p => ({ ...p, dataCasamento: e.target.value }))}/></div>
             <div><label className="label">Status</label>
@@ -1798,6 +1799,7 @@ export function ClientePerfil() {
             <input ref={inspFileRef} type="file" accept="image/*" className="hidden" onChange={e => {
               const file = e.target.files?.[0];
               if (!file) return;
+              if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande. Máximo 5MB.'); return; }
               const reader = new FileReader();
               reader.onload = ev => setInspImagem(ev.target!.result as string);
               reader.readAsDataURL(file);

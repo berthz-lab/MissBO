@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/Badge';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { fmtMoney, fmtTelefone } from '../utils/format';
+import { isValidEmail, isValidCPF, isValidPhone, formatCPF, formatPhone } from '../utils/validation';
 
 const statusOptions = [
   { value: 'lead', label: 'Lead', color: 'yellow' as const },
@@ -34,6 +35,18 @@ export function Clientes() {
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
   const [form, setForm] = useState({ ...emptyCliente });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.nome.trim()) e.nome = 'Nome é obrigatório';
+    if (!form.telefone.trim()) e.telefone = 'Telefone é obrigatório';
+    else if (!isValidPhone(form.telefone)) e.telefone = 'Telefone inválido (10 ou 11 dígitos)';
+    if (form.email && !isValidEmail(form.email)) e.email = 'E-mail inválido';
+    if (form.cpf && !isValidCPF(form.cpf)) e.cpf = 'CPF inválido';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const filtered = clientes.filter(c => {
     const matchSearch = !search
@@ -49,6 +62,7 @@ export function Clientes() {
   const openNew = () => {
     setEditingCliente(null);
     setForm({ ...emptyCliente });
+    setErrors({});
     setModalOpen(true);
   };
 
@@ -62,11 +76,12 @@ export function Clientes() {
       instagram: c.instagram || '',
       status: c.status, observacoes: c.observacoes || '',
     });
+    setErrors({});
     setModalOpen(true);
   };
 
   const handleSave = () => {
-    if (!form.nome || !form.telefone) return;
+    if (!validate()) return;
     const cliente: Cliente = {
       ...form,
       id: editingCliente?.id || genId(),
@@ -205,15 +220,23 @@ export function Clientes() {
             </div>
             <div>
               <label className="label">Telefone / WhatsApp *</label>
-              <input className="input-field" placeholder="(11) 99999-9999" value={form.telefone} onChange={f('telefone')} />
+              <input className={`input-field ${errors.telefone ? 'border-red-400 focus:border-red-400' : ''}`}
+                placeholder="(11) 99999-9999" value={form.telefone}
+                onChange={e => setForm(p => ({ ...p, telefone: formatPhone(e.target.value) }))} />
+              {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone}</p>}
             </div>
             <div>
               <label className="label">CPF</label>
-              <input className="input-field" placeholder="000.000.000-00" value={form.cpf} onChange={f('cpf')} />
+              <input className={`input-field ${errors.cpf ? 'border-red-400 focus:border-red-400' : ''}`}
+                placeholder="000.000.000-00" value={form.cpf}
+                onChange={e => setForm(p => ({ ...p, cpf: formatCPF(e.target.value) }))} />
+              {errors.cpf && <p className="text-xs text-red-500 mt-1">{errors.cpf}</p>}
             </div>
             <div>
               <label className="label">E-mail</label>
-              <input className="input-field" type="email" placeholder="email@exemplo.com" value={form.email} onChange={f('email')} />
+              <input className={`input-field ${errors.email ? 'border-red-400 focus:border-red-400' : ''}`}
+                type="email" placeholder="email@exemplo.com" value={form.email} onChange={f('email')} />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div>
               <label className="label">Instagram</label>
