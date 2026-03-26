@@ -1,34 +1,93 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import logoClaroCentro from '../assets/logo-claro-centro.png';
 import logoEscuroCentro from '../assets/logo-escuro-centro.png';
 
+type Step = 'credentials' | 'otp';
+
 export function Login() {
-  const { login } = useApp();
+  const { login, verifyOtpMfa } = useApp();
 
-  const [email, setEmail]         = useState('');
-  const [senha, setSenha]         = useState('');
+  // Etapa 1 — credenciais
+  const [step, setStep]         = useState<Step>('credentials');
+  const [email, setEmail]       = useState('');
+  const [senha, setSenha]       = useState('');
   const [showSenha, setShowSenha] = useState(false);
-  const [error, setError]         = useState('');
-  const [loading, setLoading]     = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Etapa 2 — OTP
+  const [otp, setOtp]           = useState(['', '', '', '', '', '']);
+  const otpRefs                 = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
+  const [otpEmail, setOtpEmail] = useState('');
+
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Foca o primeiro campo do OTP quando entra na etapa 2
+  useEffect(() => {
+    if (step === 'otp') otpRefs[0].current?.focus();
+  }, [step]);
+
+  // ── Etapa 1: verificar senha ───────────────────────────────────────────────
+  const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error: err } = await login(email, senha);
+    const { error: err, mfaRequired } = await login(email, senha);
     setLoading(false);
-    if (err) setError(err);
+    if (err) { setError(err); return; }
+    if (mfaRequired) {
+      setOtpEmail(email);
+      setStep('otp');
+    }
   };
 
-  const Spinner = () => (
-    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-    </svg>
-  );
+  // ── Etapa 2: verificar OTP ─────────────────────────────────────────────────
+  const handleOtpInput = (idx: number, value: string) => {
+    const char = value.replace(/\D/g, '').slice(-1);
+    const next = [...otp];
+    next[idx] = char;
+    setOtp(next);
+    setError('');
+    if (char && idx < 5) otpRefs[idx + 1].current?.focus();
+    // Auto-submit quando os 6 dígitos forem preenchidos
+    if (next.every(d => d !== '') && char) submitOtp(next.join(''));
+  };
 
+  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
+      otpRefs[idx - 1].current?.focus();
+    }
+  };
+
+  const submitOtp = async (code: string) => {
+    setLoading(true);
+    setError('');
+    const { error: err } = await verifyOtpMfa(code);
+    setLoading(false);
+    if (err) {
+      setError(err);
+      setOtp(['', '', '', '', '', '']);
+      otpRefs[0].current?.focus();
+    }
+  };
+
+  const handleOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length === 6) submitOtp(code);
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 6) {
+      setOtp(pasted.split(''));
+      otpRefs[5].current?.focus();
+      submitOtp(pasted);
+    }
+  };
+
+  // ── Painel esquerdo (brand) ────────────────────────────────────────────────
   const BrandPanel = () => (
     <div className="hidden lg:flex lg:w-[52%] relative flex-col items-center justify-center p-16 overflow-hidden"
          style={{ background: '#0A0A0A' }}>
@@ -59,6 +118,14 @@ export function Login() {
     </div>
   );
 
+  const Spinner = () => (
+    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+    </svg>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex">
       <BrandPanel />
@@ -70,45 +137,102 @@ export function Login() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-card p-8 border border-gray-100">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-100 mb-4">
-                <Lock size={18} className="text-gray-600" />
-              </div>
-              <h2 className="text-xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Bem-vinda de volta
-              </h2>
-              <p className="text-sm text-gray-400 mt-1">Entre com seu e-mail e senha para continuar</p>
-            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="label">E-MAIL</label>
-                <input type="email" value={email}
-                  onChange={e => { setEmail(e.target.value); setError(''); }}
-                  placeholder="seu@email.com"
-                  className={`input-field ${error ? 'border-red-400' : ''}`}
-                  autoFocus autoComplete="email" />
-              </div>
-              <div>
-                <label className="label">SENHA</label>
-                <div className="relative">
-                  <input type={showSenha ? 'text' : 'password'} value={senha}
-                    onChange={e => { setSenha(e.target.value); setError(''); }}
-                    placeholder="Digite sua senha"
-                    className={`input-field pr-12 ${error ? 'border-red-400' : ''}`}
-                    autoComplete="current-password" />
-                  <button type="button" onClick={() => setShowSenha(!showSenha)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 transition-colors">
-                    {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+            {/* ── Etapa 1: e-mail + senha ── */}
+            {step === 'credentials' && (
+              <>
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-100 mb-4">
+                    <Lock size={18} className="text-gray-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Bem-vinda de volta
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1">Entre com seu e-mail e senha para continuar</p>
                 </div>
-                {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
-              </div>
-              <button type="submit" disabled={loading || !email || !senha}
-                      className="btn-primary w-full justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                {loading ? <span className="inline-flex items-center gap-2"><Spinner /> Entrando...</span> : 'Entrar'}
-              </button>
-            </form>
+
+                <form onSubmit={handleCredentials} className="space-y-5">
+                  <div>
+                    <label className="label">E-MAIL</label>
+                    <input type="email" value={email}
+                      onChange={e => { setEmail(e.target.value); setError(''); }}
+                      placeholder="seu@email.com"
+                      className={`input-field ${error ? 'border-red-400' : ''}`}
+                      autoFocus autoComplete="email" />
+                  </div>
+                  <div>
+                    <label className="label">SENHA</label>
+                    <div className="relative">
+                      <input type={showSenha ? 'text' : 'password'} value={senha}
+                        onChange={e => { setSenha(e.target.value); setError(''); }}
+                        placeholder="Digite sua senha"
+                        className={`input-field pr-12 ${error ? 'border-red-400' : ''}`}
+                        autoComplete="current-password" />
+                      <button type="button" onClick={() => setShowSenha(!showSenha)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 transition-colors">
+                        {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+                  </div>
+                  <button type="submit" disabled={loading || !email || !senha}
+                          className="btn-primary w-full justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {loading ? <span className="inline-flex items-center gap-2"><Spinner /> Verificando...</span> : 'Entrar'}
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* ── Etapa 2: código OTP ── */}
+            {step === 'otp' && (
+              <>
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-100 mb-4">
+                    <Mail size={18} className="text-gray-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Verificação em 2 etapas
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Enviamos um código de 6 dígitos para<br />
+                    <span className="font-medium text-gray-600">{otpEmail}</span>
+                  </p>
+                </div>
+
+                <form onSubmit={handleOtpSubmit} className="space-y-6">
+                  <div>
+                    <label className="label text-center block mb-3">CÓDIGO DE VERIFICAÇÃO</label>
+                    <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
+                      {otp.map((digit, idx) => (
+                        <input key={idx}
+                          ref={otpRefs[idx]}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={e => handleOtpInput(idx, e.target.value)}
+                          onKeyDown={e => handleOtpKeyDown(idx, e)}
+                          className={`w-11 h-14 text-center text-xl font-bold border rounded-xl transition-all outline-none
+                            ${error ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-brand-gold bg-gray-50 focus:bg-white'}`}
+                        />
+                      ))}
+                    </div>
+                    {error && <p className="mt-3 text-xs text-red-500 text-center">{error}</p>}
+                  </div>
+
+                  <button type="submit"
+                          disabled={loading || otp.some(d => !d)}
+                          className="btn-primary w-full justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {loading ? <span className="inline-flex items-center gap-2"><Spinner /> Verificando...</span> : 'Confirmar'}
+                  </button>
+
+                  <button type="button" onClick={() => { setStep('credentials'); setError(''); setOtp(['','','','','','']); }}
+                          className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                    ← Voltar
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>
