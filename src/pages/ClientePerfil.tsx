@@ -681,6 +681,25 @@ export function ClientePerfil() {
               <p className="text-base font-bold text-brand-black">{fmtMoney(totalContrato)}</p>
               <p className="text-xs text-gray-400 mt-0.5">Total contrato</p>
             </div>
+            {(() => {
+              const entrega = contratos
+                .filter(c => c.dataEntrega && c.status !== 'cancelado')
+                .sort((a, b) => a.dataEntrega.localeCompare(b.dataEntrega))[0];
+              if (!entrega) return null;
+              const dias = Math.ceil((new Date(entrega.dataEntrega).getTime() - Date.now()) / 86400000);
+              const passado = dias < 0;
+              const hoje = dias === 0;
+              return (
+                <div className={`col-span-2 rounded-xl p-3 text-center border ${passado ? 'bg-red-50 border-red-100' : hoje ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'}`}>
+                  <p className={`text-base font-bold ${passado ? 'text-red-600' : hoje ? 'text-amber-600' : 'text-blue-700'}`}>
+                    {fmt(entrega.dataEntrega)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Entrega do vestido{passado ? ` · ${Math.abs(dias)}d atraso` : hoje ? ' · Hoje!' : ` · em ${dias}d`}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
