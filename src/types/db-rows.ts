@@ -183,4 +183,6 @@ export interface ConfigRow {
   custo_manutencao_km: number;
   itens_padrao: unknown[];
   updated_at: string;
+  mfa_enabled: boolean;
+  totp_secret: string | null;
 }
