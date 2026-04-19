@@ -91,6 +91,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <LogOut size={16} />
           <span>Sair</span>
         </button>
+        <p className="text-center text-xs pt-1 pb-0.5" style={{ color: 'rgba(255,255,255,0.18)' }}>
+          v{__APP_VERSION__}
+        </p>
       </div>
     </div>
   );
