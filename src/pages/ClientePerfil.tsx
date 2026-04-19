@@ -198,14 +198,14 @@ export function ClientePerfil() {
     .filter(c => c.status !== 'cancelado' && c.dataEntrega && c.dataEntrega >= hojeStr)
     .sort((a, b) => a.dataEntrega.localeCompare(b.dataEntrega))[0] ?? null;
   const diasEntrega = proximaEntrega
-    ? differenceInDays(parseISO(proximaEntrega.dataEntrega), new Date())
+    ? differenceInDays(parseISO(proximaEntrega.dataEntrega), parseISO(hojeStr))
     : null;
   const tiposProvaAg: TipoAgendamento[] = ['primeira_prova', 'segunda_prova', 'terceira_prova', 'quarta_prova', 'quinta_prova', 'sexta_prova', 'prova_final', 'ajuste'];
   const proximaProva = agendamentos
     .filter(a => tiposProvaAg.includes(a.tipo) && a.data >= hojeStr && a.status !== 'cancelado' && a.status !== 'concluido')
     .sort((a, b) => a.data.localeCompare(b.data))[0] ?? null;
   const diasProxProva = proximaProva
-    ? differenceInDays(parseISO(proximaProva.data), new Date())
+    ? differenceInDays(parseISO(proximaProva.data), parseISO(hojeStr))
     : null;
 
   const whatsappUrl = (tel: string) => {
@@ -698,7 +698,7 @@ export function ClientePerfil() {
                 .filter(c => c.dataEntrega && c.status !== 'cancelado')
                 .sort((a, b) => a.dataEntrega.localeCompare(b.dataEntrega))[0];
               if (!entrega) return null;
-              const dias = Math.ceil((new Date(entrega.dataEntrega).getTime() - Date.now()) / 86400000);
+              const dias = differenceInDays(parseISO(entrega.dataEntrega), parseISO(hojeStr));
               const passado = dias < 0;
               const hoje = dias === 0;
               return (
