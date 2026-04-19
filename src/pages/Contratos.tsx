@@ -39,7 +39,12 @@ export function Contratos() {
   const [editingContrato, setEditingContrato] = useState<Contrato | null>(null);
   const [form, setForm]                 = useState({ ...emptyContrato });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const { clearPersist } = useFormPersist('contrato', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingContrato);
+  const { clearPersist, hasPersisted } = useFormPersist('contrato', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingContrato);
+
+  // Reabre o modal se havia um formulário em andamento antes do reload
+  useEffect(() => {
+    if (hasPersisted && !editingContrato) setModalOpen(true);
+  }, [hasPersisted]);
 
   /* Anexo */
   const fileRef = useRef<HTMLInputElement>(null);

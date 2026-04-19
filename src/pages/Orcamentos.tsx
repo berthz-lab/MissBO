@@ -130,7 +130,12 @@ export function Orcamentos() {
   const [form,          setForm]          = useState({ ...EMPTY_FORM });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [arredondar,    setArredondar]    = useState(false);
-  const { clearPersist } = useFormPersist('orcamento', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingOrc);
+  const { clearPersist, hasPersisted } = useFormPersist('orcamento', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingOrc);
+
+  // Reabre o modal se havia um formulário em andamento antes do reload
+  useEffect(() => {
+    if (hasPersisted && !editingOrc) setModalOpen(true);
+  }, [hasPersisted]);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 

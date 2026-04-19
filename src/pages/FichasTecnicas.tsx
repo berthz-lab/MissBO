@@ -51,7 +51,12 @@ export function FichasTecnicas() {
   const [editingFicha, setEditingFicha] = useState<FichaTecnica | null>(null);
   const [form, setForm] = useState({ ...emptyFicha });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const { clearPersist } = useFormPersist('ficha', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingFicha);
+  const { clearPersist, hasPersisted } = useFormPersist('ficha', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingFicha);
+
+  // Reabre o modal se havia um formulário em andamento antes do reload
+  useEffect(() => {
+    if (hasPersisted && !editingFicha) setModalOpen(true);
+  }, [hasPersisted]);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 

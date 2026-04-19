@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormPersist } from '../hooks/useFormPersist';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, Heart, Phone, Mail, MapPin, Eye, AlertTriangle } from 'lucide-react';
@@ -37,7 +37,12 @@ export function Clientes() {
   const [form, setForm] = useState({ ...emptyCliente });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { clearPersist } = useFormPersist('cliente', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingCliente);
+  const { clearPersist, hasPersisted } = useFormPersist('cliente', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingCliente);
+
+  // Reabre o modal se havia um formulário em andamento antes do reload
+  useEffect(() => {
+    if (hasPersisted && !editingCliente) setModalOpen(true);
+  }, [hasPersisted]);
 
   const validate = () => {
     const e: Record<string, string> = {};
