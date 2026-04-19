@@ -234,19 +234,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, senha: string) => {
     if (!isSupabaseConfigured) return { error: 'Supabase não configurado.', mfaRequired: false };
 
-    // Bloqueia onAuthStateChange antes do signIn para evitar loadAll precoce
+    // Etapa 1: verifica senha — se errar, retorna imediatamente
+    const { error: pwError } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (pwError) return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
+
+    // Senha correta → bloqueia onAuthStateChange e faz sign out silencioso
+    // (usamos signOut para destruir a sessão de senha; o OTP criará a sessão real)
     mfaPendingRef.current = true;
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-    if (error) {
-      mfaPendingRef.current = false;
-      return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
-    }
-
-    // Senha correta → registra e-mail pendente, derruba sessão, envia OTP
     setPendingEmail(email);
-    await supabase.auth.signOut();
 
+    // signOut limpa a sessão de senha sem disparar loadAll (mfaPendingRef está true)
+    await supabase.auth.signOut({ scope: 'local' }); // scope:local → não invalida outros dispositivos
+
+    // Etapa 2: envia OTP para o e-mail
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: false },
@@ -260,14 +260,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const verifyOtpMfa = useCallback(async (code: string) => {
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       email: pendingEmail,
       token: code,
       type: 'email',
     });
-    if (error) return { error: 'Código inválido ou expirado.' };
+    if (error || !data.session) return { error: 'Código inválido ou expirado.' };
 
-    // OTP verificado — libera onAuthStateChange e carrega dados
+    // Sessão real criada pelo OTP — libera o guard e inicializa o app
     mfaPendingRef.current = false;
     setIsLoggedIn(true);
     loadAll().catch(console.error);
