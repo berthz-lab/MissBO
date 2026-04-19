@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings, MapPin, Car, Fuel, Save, ChevronRight,
   TrendingDown, Navigation, Info, Plus, Trash2, Package,
@@ -28,6 +28,33 @@ export function Configuracoes() {
   const [totpCode, setTotpCode]             = useState('');
   const [totpError, setTotpError]           = useState('');
   const [totpVerifying, setTotpVerifying]   = useState(false);
+
+  /* ── Persistência TOTP no sessionStorage (sobrevive ao switch de app no PWA) ── */
+  const TOTP_KEY = 'missbo_totp_enrollment';
+
+  // Restaura enrollment interrompido (ex: saiu pro Authenticator e voltou)
+  useEffect(() => {
+    const saved = sessionStorage.getItem(TOTP_KEY);
+    if (!saved) return;
+    try {
+      const { secret } = JSON.parse(saved) as { secret: string };
+      if (secret) {
+        setTotpTempSecret(secret);
+        setTotpPhase('generating');
+        generateQRCode(secret).then(qr => { setTotpQrUrl(qr); setTotpPhase('scanning'); });
+      }
+    } catch { sessionStorage.removeItem(TOTP_KEY); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Salva enquanto está na fase 'scanning'
+  useEffect(() => {
+    if (totpPhase === 'scanning' && totpTempSecret) {
+      try { sessionStorage.setItem(TOTP_KEY, JSON.stringify({ secret: totpTempSecret })); }
+      catch { /* quota */ }
+    } else {
+      sessionStorage.removeItem(TOTP_KEY);
+    }
+  }, [totpPhase, totpTempSecret]);
 
   const startTotpEnrollment = async () => {
     setTotpPhase('generating');

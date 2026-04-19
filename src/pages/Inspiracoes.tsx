@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { Plus, Search, Trash2, Star, Image, ChevronDown, ChevronUp, Heart, Upload } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Inspiracao, CategoriaInspiracao } from '../types';
@@ -37,6 +38,12 @@ export function Inspiracoes() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<Inspiracao | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /* ── Persistência do formulário ── */
+  const { clearPersist, hasPersisted } = useFormPersist('inspiracao', form, setForm, modalOpen);
+  // Ao restaurar, sincroniza selectedClienteId a partir do form (clienteId já vem no form)
+  useEffect(() => { if (form.clienteId && modalOpen) setSelectedClienteId(form.clienteId); }, [form.clienteId, modalOpen]);
+  useEffect(() => { if (hasPersisted) setModalOpen(true); }, [hasPersisted]);
 
   const clientesComFiltro = clientes.filter(c => {
     if (!search) return true;
@@ -79,6 +86,7 @@ export function Inspiracoes() {
       createdAt: new Date().toISOString(),
     };
     saveInspiracao(insp);
+    clearPersist();
     setModalOpen(false);
   };
 

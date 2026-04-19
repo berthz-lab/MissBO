@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { Plus, Ruler, Search, ChevronDown, ChevronUp, Edit2, Trash2, Save } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MedidasNoiva } from '../types';
@@ -87,6 +88,12 @@ export function FichaNoiva() {
   const [form, setForm] = useState<Record<string, string | number>>({ data: emptyMedidas.data, observacoes: '' });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  /* ── Persistência do formulário ── */
+  const { clearPersist, hasPersisted } = useFormPersist('medidas', form, setForm, modalOpen && !editingMedida);
+  // Ao restaurar, sincroniza selectedClienteId a partir do campo _clienteId que guardamos no form
+  useEffect(() => { if (form._clienteId && modalOpen) setSelectedClienteId(String(form._clienteId)); }, [form._clienteId, modalOpen]);
+  useEffect(() => { if (hasPersisted) setModalOpen(true); }, [hasPersisted]);
+
   const clientesFiltrados = clientes.filter(c =>
     !search || c.nome.toLowerCase().includes(search.toLowerCase())
   );
@@ -94,7 +101,8 @@ export function FichaNoiva() {
   const openNew = (clienteId: string) => {
     setSelectedClienteId(clienteId);
     setEditingMedida(null);
-    setForm({ data: new Date().toISOString().split('T')[0], observacoes: '' });
+    // _clienteId é persistido junto com o form para sobreviver ao reload
+    setForm({ data: new Date().toISOString().split('T')[0], observacoes: '', _clienteId: clienteId });
     setModalOpen(true);
   };
 
@@ -113,7 +121,7 @@ export function FichaNoiva() {
   const handleSave = () => {
     const medida: MedidasNoiva = {
       id: editingMedida?.id || genId(),
-      clienteId: selectedClienteId,
+      clienteId: String(form._clienteId || selectedClienteId),
       data: String(form.data),
       observacoes: String(form.observacoes || ''),
       createdAt: editingMedida?.createdAt || new Date().toISOString(),
@@ -124,6 +132,7 @@ export function FichaNoiva() {
       }
     });
     saveMedidas(medida);
+    clearPersist();
     setModalOpen(false);
   };
 

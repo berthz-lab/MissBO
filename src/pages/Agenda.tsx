@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useFormPersist } from '../hooks/useFormPersist';
 import {
   Plus, Search, Edit2, Trash2, Calendar, Clock, CheckCircle2, Bell,
   ChevronLeft, ChevronRight, List, Grid, AlertTriangle,
@@ -70,6 +71,10 @@ export function Agenda() {
   /* Calendário */
   const [calMonth, setCalMonth]   = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+  /* ── Persistência do formulário (sobrevive reload do PWA) ── */
+  const { clearPersist, hasPersisted } = useFormPersist('agenda', form, setForm, modalOpen && !editingAg);
+  useEffect(() => { if (hasPersisted) setModalOpen(true); }, [hasPersisted]);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
   const today = new Date();
@@ -147,6 +152,7 @@ export function Agenda() {
       status: form.status, createdAt: editingAg?.createdAt || new Date().toISOString(),
     };
     saveAgendamento(ag);
+    clearPersist();
     setModalOpen(false);
   };
 

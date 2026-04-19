@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { Plus, TrendingUp, TrendingDown, DollarSign, Edit2, Trash2, Scissors } from 'lucide-react';
 import { Pagination, usePagination } from '../components/ui/Pagination';
 import { fmtMoney, HIDDEN_VALUE } from '../utils/format';
@@ -60,6 +61,10 @@ export function Financeiro() {
   const [editingPag, setEditingPag] = useState<Pagamento | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  /* ── Persistência do formulário ── */
+  const { clearPersist, hasPersisted } = useFormPersist('pagamento', form, setForm, modalOpen && !editingPag);
+  useEffect(() => { if (hasPersisted) setModalOpen(true); }, [hasPersisted]);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
@@ -200,6 +205,7 @@ export function Financeiro() {
       createdAt: editingPag?.createdAt || new Date().toISOString(),
     };
     savePagamento(pag);
+    clearPersist();
     setModalOpen(false);
   };
 
