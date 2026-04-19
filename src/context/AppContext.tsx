@@ -234,19 +234,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, senha: string) => {
     if (!isSupabaseConfigured) return { error: 'Supabase não configurado.', mfaRequired: false };
 
-    // Etapa 1: verifica senha — se errar, retorna imediatamente
+    // Etapa 1: verifica senha
     const { error: pwError } = await supabase.auth.signInWithPassword({ email, password: senha });
     if (pwError) return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
 
-    // Senha correta → bloqueia onAuthStateChange e faz sign out silencioso
-    // (usamos signOut para destruir a sessão de senha; o OTP criará a sessão real)
+    // Se MFA desativado nas configurações → login direto, sem OTP
+    if (!config.mfaEnabled) {
+      setIsLoggedIn(true);
+      loadAll().catch(console.error);
+      return { error: null, mfaRequired: false };
+    }
+
+    // MFA ativado → bloqueia onAuthStateChange, destrói sessão de senha e envia OTP
     mfaPendingRef.current = true;
     setPendingEmail(email);
+    await supabase.auth.signOut({ scope: 'local' });
 
-    // signOut limpa a sessão de senha sem disparar loadAll (mfaPendingRef está true)
-    await supabase.auth.signOut({ scope: 'local' }); // scope:local → não invalida outros dispositivos
-
-    // Etapa 2: envia OTP para o e-mail
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: false },
@@ -257,7 +260,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { error: null, mfaRequired: true };
-  }, []);
+  }, [config.mfaEnabled, loadAll]);
 
   const verifyOtpMfa = useCallback(async (code: string) => {
     const { data, error } = await supabase.auth.verifyOtp({

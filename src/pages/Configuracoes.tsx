@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Settings, MapPin, Car, Fuel, Wrench, Save, ChevronRight,
-  TrendingDown, Navigation, Info, Plus, Trash2, Package
+  TrendingDown, Navigation, Info, Plus, Trash2, Package, ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ConfigSistema, ItemPadraoOrcamento } from '../types';
@@ -315,6 +315,42 @@ export function Configuracoes() {
         {(form.itensPadraoOrcamento || []).length === 0 && (
           <p className="text-xs text-gray-300 text-center italic py-2">
             Nenhum item padrão cadastrado. Adicione acima para pré-preencher orçamentos automaticamente.
+          </p>
+        )}
+      </div>
+
+      {/* ── Segurança ── */}
+      <div className="card space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <ShieldCheck size={16} className="text-brand-gold" />
+          <h2 className="font-bold text-brand-charcoal">Segurança</h2>
+        </div>
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-brand-charcoal">Verificação em 2 etapas (MFA)</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Ao ativar, cada login exigirá um código de 6 dígitos enviado para o seu e-mail.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.mfaEnabled}
+            onClick={() => setForm(p => ({ ...p, mfaEnabled: !p.mfaEnabled }))}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              form.mfaEnabled ? 'bg-brand-black' : 'bg-gray-200'
+            }`}
+          >
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              form.mfaEnabled ? 'translate-x-5' : 'translate-x-0'
+            }`} />
+          </button>
+        </div>
+
+        {form.mfaEnabled && (
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+            ⚠️ Certifique-se de que seu e-mail está acessível antes de salvar. O próximo login exigirá o código.
           </p>
         )}
       </div>

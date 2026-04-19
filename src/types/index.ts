@@ -20,6 +20,8 @@ export interface ConfigSistema {
   custoManutencaoKm: number;  // R$/km (óleos, pneus, etc)
   // Itens padrão do orçamento
   itensPadraoOrcamento: ItemPadraoOrcamento[];
+  // Segurança
+  mfaEnabled: boolean;        // Verificação em 2 etapas via OTP por e-mail
 }
 
 export const defaultConfig: ConfigSistema = {
@@ -31,6 +33,7 @@ export const defaultConfig: ConfigSistema = {
   precoCombustivel: 6.5,
   custoManutencaoKm: 0.10,
   itensPadraoOrcamento: [],
+  mfaEnabled: false,
 };
 
 // ─── CLIENTE ────────────────────────────────────────────────────────────────
