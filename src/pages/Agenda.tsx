@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFormPersist } from '../hooks/useFormPersist';
 import {
   Plus, Search, Edit2, Trash2, Calendar, Clock, CheckCircle2, Bell,
-  ChevronLeft, ChevronRight, List, Grid, AlertTriangle,
+  ChevronLeft, ChevronRight, List, Grid, AlertTriangle, Ban,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Agendamento, TipoAgendamento } from '../types';
@@ -137,6 +137,9 @@ export function Agenda() {
   /* U3 — data no passado */
   const isPastDate = form.data < hojeStr;
 
+  const tipoAtual = tiposAgendamento.find(t => t.value === form.tipo);
+  const semCliente = tipoAtual?.semCliente ?? false;
+
   /* U4 — conflito de horário (mesmo dia+hora, outro agendamento não cancelado) */
   const conflito = agendamentos.find(a =>
     a.id !== editingAg?.id &&
@@ -145,8 +148,15 @@ export function Agenda() {
     a.status !== 'cancelado',
   );
 
-  const tipoAtual = tiposAgendamento.find(t => t.value === form.tipo);
-  const semCliente = tipoAtual?.semCliente ?? false;
+  /* U5 — dia bloqueado por folga ou férias (impede novos agendamentos) */
+  const diaFolgaFerias = !semCliente
+    ? agendamentos.find(a =>
+        a.id !== editingAg?.id &&
+        a.data === form.data &&
+        (a.tipo === 'folga' || a.tipo === 'ferias') &&
+        a.status !== 'cancelado'
+      )
+    : undefined;
 
   const handleSave = () => {
     if (!semCliente && !form.clienteId) return;
@@ -294,6 +304,10 @@ export function Agenda() {
                   const isCurrentMonth = isSameMonth(day, calMonth);
                   const isTodayDay = isToday(day);
                   const hasAgs = ags.length > 0;
+                  // Dia bloqueado = tem folga ou férias ativa
+                  const isBloqueado = ags.some(a =>
+                    (a.tipo === 'folga' || a.tipo === 'ferias') && a.status !== 'cancelado'
+                  );
 
                   return (
                     <button
@@ -303,18 +317,28 @@ export function Agenda() {
                         relative min-h-[52px] p-1.5 rounded-xl flex flex-col items-center transition-all
                         ${isSelected
                           ? 'bg-brand-black text-white'
+                          : isBloqueado
+                          ? 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                           : isTodayDay
                           ? 'bg-brand-gold/15 text-brand-black'
                           : 'hover:bg-gray-100 text-gray-700'}
                         ${!isCurrentMonth ? 'opacity-40' : ''}
                       `}
+                      style={isBloqueado && !isSelected ? {
+                        backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(0,0,0,0.04) 5px, rgba(0,0,0,0.04) 10px)',
+                      } : undefined}
                     >
-                      <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isTodayDay && !isSelected ? 'bg-brand-gold text-white font-bold' : ''}`}>
+                      <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isTodayDay && !isSelected && !isBloqueado ? 'bg-brand-gold text-white font-bold' : ''}`}>
                         {format(day, 'd')}
                       </span>
 
-                      {/* Dots dos agendamentos */}
-                      {hasAgs && (
+                      {/* Ícone de bloqueio para dias de folga/férias */}
+                      {isBloqueado && !isSelected && (
+                        <Ban size={10} className="mt-0.5 text-slate-400" />
+                      )}
+
+                      {/* Dots dos agendamentos (apenas se não bloqueado ou se selecionado) */}
+                      {hasAgs && !isBloqueado && (
                         <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center max-w-full">
                           {ags.slice(0, 3).map(a => {
                             const ti = tipoInfo(a.tipo);
@@ -603,16 +627,25 @@ export function Agenda() {
           )}
 
           {/* U4 — aviso conflito de horário */}
-          {conflito && (
+          {conflito && !diaFolgaFerias && (
             <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
               <AlertTriangle size={13} className="flex-shrink-0" />
               Conflito: <strong>{clientes.find(c => c.id === conflito.clienteId)?.nome}</strong> já está agendada neste mesmo horário ({conflito.hora}).
             </div>
           )}
 
+          {/* U5 — dia bloqueado por folga/férias */}
+          {diaFolgaFerias && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+              <Ban size={13} className="flex-shrink-0" />
+              Este dia está bloqueado — <strong>{diaFolgaFerias.tipo === 'ferias' ? 'Férias' : 'Folga'}</strong> cadastrada. Remova ou altere o bloqueio para agendar.
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <button onClick={() => setModalOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>
-            <button onClick={handleSave} className="btn-primary flex-1 justify-center" disabled={!semCliente && !form.clienteId}>
+            <button onClick={handleSave} className="btn-primary flex-1 justify-center"
+              disabled={(!semCliente && !form.clienteId) || !!diaFolgaFerias}>
               {editingAg ? 'Salvar' : 'Agendar'}
             </button>
           </div>

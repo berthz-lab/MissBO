@@ -5,7 +5,7 @@ import {
   FileText, Receipt, BarChart3, Image, Ruler, Clock, CheckCircle2,
   Save, X, Printer, Upload, Star, ChevronRight, AlertCircle,
   Scissors, DollarSign, AlertTriangle, CalendarDays, Navigation, Car, Fuel,
-  Instagram, ClipboardList,
+  Instagram, ClipboardList, Ban,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { genId } from '../utils/storage';
@@ -1729,6 +1729,18 @@ export function ClientePerfil() {
 
           {/* Aviso: conflito de horário */}
           {(() => {
+            const folgaFerias = app.agendamentos.find(a =>
+              a.id !== editAg?.id &&
+              a.data === agForm.data &&
+              (a.tipo === 'folga' || a.tipo === 'ferias') &&
+              a.status !== 'cancelado',
+            );
+            if (folgaFerias) return (
+              <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+                <Ban size={13} className="flex-shrink-0" />
+                Este dia está bloqueado — <strong>{folgaFerias.tipo === 'ferias' ? 'Férias' : 'Folga'}</strong> cadastrada. Remova o bloqueio na Agenda para agendar.
+              </div>
+            );
             const conflito = app.agendamentos.find(a =>
               a.id !== editAg?.id &&
               a.data === agForm.data &&
@@ -1747,7 +1759,13 @@ export function ClientePerfil() {
 
           <div className="flex gap-3 pt-2">
             <button onClick={() => setAgOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>
-            <button onClick={saveAg} className="btn-primary flex-1 justify-center" disabled={!agForm.data}><Save size={14}/> Salvar</button>
+            <button onClick={saveAg} className="btn-primary flex-1 justify-center"
+              disabled={!agForm.data || !!app.agendamentos.find(a =>
+                a.id !== editAg?.id && a.data === agForm.data &&
+                (a.tipo === 'folga' || a.tipo === 'ferias') && a.status !== 'cancelado'
+              )}>
+              <Save size={14}/> Salvar
+            </button>
           </div>
         </div>
       </Modal>
