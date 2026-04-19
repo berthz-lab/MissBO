@@ -468,6 +468,7 @@ function toConfig(r: ConfigRow): ConfigSistema {
       valorUnitario: Number(i.valorUnitario ?? 0),
     })),
     mfaEnabled: Boolean((r as unknown as Record<string, unknown>).mfa_enabled ?? false),
+    totpSecret: ((r as unknown as Record<string, unknown>).totp_secret as string | undefined) ?? undefined,
   };
 }
 function fromConfig(c: ConfigSistema): Partial<ConfigRow> {
@@ -482,7 +483,7 @@ function fromConfig(c: ConfigSistema): Partial<ConfigRow> {
     custo_manutencao_km: c.custoManutencaoKm,
     itens_padrao: c.itensPadraoOrcamento,
     updated_at: new Date().toISOString(),
-    ...({ mfa_enabled: c.mfaEnabled } as object),
+    ...({ mfa_enabled: c.mfaEnabled, totp_secret: c.totpSecret ?? null } as object),
   };
 }
 

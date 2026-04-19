@@ -1,34 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import logoClaroCentro from '../assets/logo-claro-centro.png';
 import logoEscuroCentro from '../assets/logo-escuro-centro.png';
 
-type Step = 'credentials' | 'otp';
+type Step = 'credentials' | 'totp';
 
 export function Login() {
-  const { login, verifyOtpMfa } = useApp();
+  const { login, verifyTotpCode } = useApp();
 
   // Etapa 1 — credenciais
-  const [step, setStep]         = useState<Step>('credentials');
-  const [email, setEmail]       = useState('');
-  const [senha, setSenha]       = useState('');
+  const [step, setStep]           = useState<Step>('credentials');
+  const [email, setEmail]         = useState('');
+  const [senha, setSenha]         = useState('');
   const [showSenha, setShowSenha] = useState(false);
 
-  // Etapa 2 — OTP
-  const [otp, setOtp]           = useState(['', '', '', '', '', '']);
-  const otpRefs                 = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
-  const [otpEmail, setOtpEmail] = useState('');
+  // Etapa 2 — TOTP
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const otpRefs       = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
 
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Foca o primeiro campo do OTP quando entra na etapa 2
   useEffect(() => {
-    if (step === 'otp') otpRefs[0].current?.focus();
+    if (step === 'totp') setTimeout(() => otpRefs[0].current?.focus(), 50);
   }, [step]);
 
-  // ── Etapa 1: verificar senha ───────────────────────────────────────────────
+  // ── Etapa 1: verificar e-mail + senha ─────────────────────────────────────
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -36,13 +34,21 @@ export function Login() {
     const { error: err, mfaRequired } = await login(email, senha);
     setLoading(false);
     if (err) { setError(err); return; }
-    if (mfaRequired) {
-      setOtpEmail(email);
-      setStep('otp');
-    }
+    if (mfaRequired) setStep('totp');
   };
 
-  // ── Etapa 2: verificar OTP ─────────────────────────────────────────────────
+  // ── Etapa 2: verificar código TOTP (Google Authenticator) ─────────────────
+  const submitTotp = (code: string) => {
+    setError('');
+    const valid = verifyTotpCode(code);
+    if (!valid) {
+      setError('Código inválido. Verifique o Google Authenticator.');
+      setOtp(['', '', '', '', '', '']);
+      setTimeout(() => otpRefs[0].current?.focus(), 50);
+    }
+    // Se válido, AppContext seta isLoggedIn=true e a rota redireciona
+  };
+
   const handleOtpInput = (idx: number, value: string) => {
     const char = value.replace(/\D/g, '').slice(-1);
     const next = [...otp];
@@ -50,32 +56,11 @@ export function Login() {
     setOtp(next);
     setError('');
     if (char && idx < 5) otpRefs[idx + 1].current?.focus();
-    // Auto-submit quando os 6 dígitos forem preenchidos
-    if (next.every(d => d !== '') && char) submitOtp(next.join(''));
+    if (next.every(d => d !== '') && char) submitTotp(next.join(''));
   };
 
   const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
-      otpRefs[idx - 1].current?.focus();
-    }
-  };
-
-  const submitOtp = async (code: string) => {
-    setLoading(true);
-    setError('');
-    const { error: err } = await verifyOtpMfa(code);
-    setLoading(false);
-    if (err) {
-      setError(err);
-      setOtp(['', '', '', '', '', '']);
-      otpRefs[0].current?.focus();
-    }
-  };
-
-  const handleOtpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otp.join('');
-    if (code.length === 6) submitOtp(code);
+    if (e.key === 'Backspace' && !otp[idx] && idx > 0) otpRefs[idx - 1].current?.focus();
   };
 
   const handleOtpPaste = (e: React.ClipboardEvent) => {
@@ -83,7 +68,7 @@ export function Login() {
     if (pasted.length === 6) {
       setOtp(pasted.split(''));
       otpRefs[5].current?.focus();
-      submitOtp(pasted);
+      submitTotp(pasted);
     }
   };
 
@@ -183,25 +168,25 @@ export function Login() {
               </>
             )}
 
-            {/* ── Etapa 2: código OTP ── */}
-            {step === 'otp' && (
+            {/* ── Etapa 2: código TOTP (Google Authenticator) ── */}
+            {step === 'totp' && (
               <>
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-100 mb-4">
-                    <Mail size={18} className="text-gray-600" />
+                    <Smartphone size={18} className="text-gray-600" />
                   </div>
                   <h2 className="text-xl font-bold text-brand-black" style={{ fontFamily: "'Playfair Display', serif" }}>
                     Verificação em 2 etapas
                   </h2>
                   <p className="text-sm text-gray-400 mt-2">
-                    Enviamos um código de 6 dígitos para<br />
-                    <span className="font-medium text-gray-600">{otpEmail}</span>
+                    Abra o <span className="font-medium text-gray-600">Google Authenticator</span><br />
+                    e insira o código de 6 dígitos
                   </p>
                 </div>
 
-                <form onSubmit={handleOtpSubmit} className="space-y-6">
+                <div className="space-y-6">
                   <div>
-                    <label className="label text-center block mb-3">CÓDIGO DE VERIFICAÇÃO</label>
+                    <label className="label text-center block mb-3">CÓDIGO DO AUTHENTICATOR</label>
                     <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                       {otp.map((digit, idx) => (
                         <input key={idx}
@@ -220,17 +205,18 @@ export function Login() {
                     {error && <p className="mt-3 text-xs text-red-500 text-center">{error}</p>}
                   </div>
 
-                  <button type="submit"
-                          disabled={loading || otp.some(d => !d)}
+                  <button type="button"
+                          onClick={() => { if (otp.every(d => d !== '')) submitTotp(otp.join('')); }}
+                          disabled={otp.some(d => !d)}
                           className="btn-primary w-full justify-center py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                    {loading ? <span className="inline-flex items-center gap-2"><Spinner /> Verificando...</span> : 'Confirmar'}
+                    Confirmar
                   </button>
 
                   <button type="button" onClick={() => { setStep('credentials'); setError(''); setOtp(['','','','','','']); }}
                           className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors">
                     ← Voltar
                   </button>
-                </form>
+                </div>
               </>
             )}
           </div>

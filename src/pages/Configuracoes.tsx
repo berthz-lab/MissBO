@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import {
-  Settings, MapPin, Car, Fuel, Wrench, Save, ChevronRight,
-  TrendingDown, Navigation, Info, Plus, Trash2, Package, ShieldCheck
+  Settings, MapPin, Car, Fuel, Save, ChevronRight,
+  TrendingDown, Navigation, Info, Plus, Trash2, Package,
+  ShieldCheck, Smartphone, CheckCircle2, XCircle, Loader2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ConfigSistema, ItemPadraoOrcamento } from '../types';
 import { genId } from '../utils/storage';
+import { generateTotpSecret, generateQRCode, verifyTotp } from '../utils/totp';
 
 const fmtMoney = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -17,6 +19,48 @@ export function Configuracoes() {
 
   /* Estado para novo item padrão */
   const [novoItem, setNovoItem] = useState({ descricao: '', quantidade: '1', valorUnitario: '' });
+
+  /* ── TOTP enrollment ── */
+  type TotpPhase = 'idle' | 'generating' | 'scanning' | 'verified';
+  const [totpPhase, setTotpPhase]           = useState<TotpPhase>('idle');
+  const [totpTempSecret, setTotpTempSecret] = useState('');
+  const [totpQrUrl, setTotpQrUrl]           = useState('');
+  const [totpCode, setTotpCode]             = useState('');
+  const [totpError, setTotpError]           = useState('');
+  const [totpVerifying, setTotpVerifying]   = useState(false);
+
+  const startTotpEnrollment = async () => {
+    setTotpPhase('generating');
+    const secret = generateTotpSecret();
+    const qr     = await generateQRCode(secret);
+    setTotpTempSecret(secret);
+    setTotpQrUrl(qr);
+    setTotpCode('');
+    setTotpError('');
+    setTotpPhase('scanning');
+  };
+
+  const confirmTotpCode = () => {
+    setTotpError('');
+    setTotpVerifying(true);
+    const code = totpCode.replace(/\D/g, '');
+    if (code.length !== 6) { setTotpError('Digite os 6 dígitos do código.'); setTotpVerifying(false); return; }
+    const ok = verifyTotp(totpTempSecret, code);
+    setTotpVerifying(false);
+    if (!ok) { setTotpError('Código incorreto. Tente novamente — o código renova a cada 30s.'); return; }
+    // Enrollment confirmed — save secret into form (handleSave will persist)
+    setForm(p => ({ ...p, mfaEnabled: true, totpSecret: totpTempSecret }));
+    setTotpPhase('verified');
+  };
+
+  const disableTotp = () => {
+    setForm(p => ({ ...p, mfaEnabled: false, totpSecret: undefined }));
+    setTotpPhase('idle');
+    setTotpCode('');
+    setTotpError('');
+    setTotpTempSecret('');
+    setTotpQrUrl('');
+  };
 
   const set = (key: keyof ConfigSistema, val: string | number) =>
     setForm(p => ({ ...p, [key]: val }));
@@ -320,38 +364,135 @@ export function Configuracoes() {
       </div>
 
       {/* ── Segurança ── */}
-      <div className="card space-y-4">
-        <div className="flex items-center gap-2 mb-1">
+      <div className="card space-y-5">
+        <div className="flex items-center gap-2">
           <ShieldCheck size={16} className="text-brand-gold" />
           <h2 className="font-bold text-brand-charcoal">Segurança</h2>
         </div>
 
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-brand-charcoal">Verificação em 2 etapas (MFA)</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Ao ativar, cada login exigirá um código de 6 dígitos enviado para o seu e-mail.
-            </p>
+        {/* ── Estado: MFA ativo e já configurado ── */}
+        {form.mfaEnabled && form.totpSecret && totpPhase !== 'scanning' && totpPhase !== 'generating' && (
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" />
+                <p className="text-sm font-medium text-brand-charcoal">Verificação em 2 etapas ativa</p>
+              </div>
+              <p className="text-xs text-gray-400 mt-1 ml-5">
+                Cada login exige o código do <strong>Google Authenticator</strong>.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={disableTotp}
+              className="flex-shrink-0 text-xs text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1.5 transition-colors"
+            >
+              Desativar
+            </button>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={form.mfaEnabled}
-            onClick={() => setForm(p => ({ ...p, mfaEnabled: !p.mfaEnabled }))}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              form.mfaEnabled ? 'bg-brand-black' : 'bg-gray-200'
-            }`}
-          >
-            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-              form.mfaEnabled ? 'translate-x-5' : 'translate-x-0'
-            }`} />
-          </button>
-        </div>
+        )}
 
-        {form.mfaEnabled && (
-          <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-            ⚠️ Certifique-se de que seu e-mail está acessível antes de salvar. O próximo login exigirá o código.
-          </p>
+        {/* ── Estado: MFA desativado — botão para ativar ── */}
+        {!form.mfaEnabled && totpPhase === 'idle' && (
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-brand-charcoal">Verificação em 2 etapas (MFA)</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Proteja o login com o <strong>Google Authenticator</strong>. Gratuito e sem dependência de e-mail.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={startTotpEnrollment}
+              className="flex-shrink-0 btn-primary text-xs px-4 py-1.5"
+            >
+              Ativar
+            </button>
+          </div>
+        )}
+
+        {/* ── Estado: gerando QR ── */}
+        {totpPhase === 'generating' && (
+          <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
+            <Loader2 size={15} className="animate-spin" />
+            Gerando código QR…
+          </div>
+        )}
+
+        {/* ── Estado: exibir QR + campo de verificação ── */}
+        {totpPhase === 'scanning' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Smartphone size={15} className="text-brand-gold" />
+              <p className="text-sm font-semibold text-brand-charcoal">Configure o Google Authenticator</p>
+            </div>
+
+            <ol className="text-xs text-gray-500 space-y-1 list-decimal list-inside">
+              <li>Abra o <strong>Google Authenticator</strong> no seu celular.</li>
+              <li>Toque em <strong>"+"</strong> e escolha <strong>"Escanear código QR"</strong>.</li>
+              <li>Aponte a câmera para o QR abaixo.</li>
+              <li>Digite o código de 6 dígitos gerado para confirmar.</li>
+            </ol>
+
+            {totpQrUrl && (
+              <div className="flex justify-center">
+                <div className="p-3 bg-white rounded-2xl shadow border border-gray-100 inline-block">
+                  <img src={totpQrUrl} alt="QR Code TOTP" className="w-48 h-48" />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="label">Código de verificação (6 dígitos)</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={totpCode}
+                  onChange={e => { setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setTotpError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && confirmTotpCode()}
+                  className={`input-field text-center tracking-[0.4em] text-lg font-bold ${totpError ? 'border-red-400' : ''}`}
+                  autoComplete="one-time-code"
+                />
+                <button
+                  type="button"
+                  onClick={confirmTotpCode}
+                  disabled={totpVerifying || totpCode.length !== 6}
+                  className="btn-primary px-4 flex-shrink-0 disabled:opacity-50"
+                >
+                  {totpVerifying ? <Loader2 size={16} className="animate-spin" /> : 'Verificar'}
+                </button>
+              </div>
+              {totpError && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <XCircle size={12} /> {totpError}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { setTotpPhase('idle'); setTotpCode(''); setTotpError(''); }}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ← Cancelar
+            </button>
+          </div>
+        )}
+
+        {/* ── Estado: verificação concluída ── */}
+        {totpPhase === 'verified' && (
+          <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 flex items-start gap-3">
+            <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-emerald-800">Google Authenticator configurado!</p>
+              <p className="text-xs text-emerald-600 mt-0.5">
+                Clique em <strong>Salvar configurações</strong> abaixo para ativar o MFA permanentemente.
+              </p>
+            </div>
+          </div>
         )}
       </div>
 

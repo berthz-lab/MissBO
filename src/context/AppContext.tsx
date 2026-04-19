@@ -11,6 +11,7 @@ import {
   parcelaProvaDb, configDb, upsertArr,
 } from '../utils/db';
 import { supabase, isSupabaseConfigured } from '../utils/supabase';
+import { verifyTotp } from '../utils/totp';
 import { useClienteSlice } from './slices/useClienteSlice';
 import { useFichasSlice } from './slices/useFichasSlice';
 import { useOrcamentoSlice } from './slices/useOrcamentoSlice';
@@ -32,6 +33,7 @@ interface AppContextType {
   isLoggedIn: boolean;
   login: (email: string, senha: string) => Promise<{ error: string | null; mfaRequired: boolean }>;
   verifyOtpMfa: (code: string) => Promise<{ error: string | null }>;
+  verifyTotpCode: (code: string) => boolean;
   logout: () => Promise<void>;
   // Valores ocultos
   valoresOcultos: boolean;
@@ -245,37 +247,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { error: null, mfaRequired: false };
     }
 
-    // MFA ativado → bloqueia onAuthStateChange, destrói sessão de senha e envia OTP
+    // MFA via TOTP (Google Authenticator) — sessão de senha é mantida
+    // O guard impede que loadAll() seja chamado antes da verificação do código
     mfaPendingRef.current = true;
-    setPendingEmail(email);
-    await supabase.auth.signOut({ scope: 'local' });
-
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
-    if (otpError) {
-      mfaPendingRef.current = false;
-      return { error: 'Erro ao enviar código. Tente novamente.', mfaRequired: false };
-    }
-
     return { error: null, mfaRequired: true };
   }, [config.mfaEnabled, loadAll]);
 
-  const verifyOtpMfa = useCallback(async (code: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: pendingEmail,
-      token: code,
-      type: 'email',
-    });
-    if (error || !data.session) return { error: 'Código inválido ou expirado.' };
+  /** Verifica código TOTP (Google Authenticator) — chamado pela tela de login */
+  const verifyTotpCode = useCallback((code: string): boolean => {
+    const secret = config.totpSecret;
+    if (!secret) return false;
+    const valid = verifyTotp(secret, code);
+    if (valid) {
+      mfaPendingRef.current = false;
+      setIsLoggedIn(true);
+      loadAll().catch(console.error);
+    }
+    return valid;
+  }, [config.totpSecret, loadAll]);
 
-    // Sessão real criada pelo OTP — libera o guard e inicializa o app
-    mfaPendingRef.current = false;
-    setIsLoggedIn(true);
-    loadAll().catch(console.error);
-    return { error: null };
-  }, [pendingEmail, loadAll]);
+  /** Mantido para compatibilidade — não usado com TOTP */
+  const verifyOtpMfa = useCallback(async (_code: string) => {
+    return { error: 'MFA via e-mail desativado. Use o Google Authenticator.' };
+  }, []);
 
   const logout = useCallback(async () => {
     mfaPendingRef.current = false;
@@ -306,7 +300,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading,
       toast, clearToast,
       config, saveConfig, custoPorKm,
-      isLoggedIn, login, verifyOtpMfa, logout, valoresOcultos, toggleValores,
+      isLoggedIn, login, verifyOtpMfa, verifyTotpCode, logout, valoresOcultos, toggleValores,
       clientes, ...clienteSlice,
       medidas, fichasTecnicas, ...fichasSlice,
       contratos, ...contratoSlice,

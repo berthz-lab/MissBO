@@ -21,7 +21,8 @@ export interface ConfigSistema {
   // Itens padrão do orçamento
   itensPadraoOrcamento: ItemPadraoOrcamento[];
   // Segurança
-  mfaEnabled: boolean;        // Verificação em 2 etapas via OTP por e-mail
+  mfaEnabled: boolean;        // Verificação em 2 etapas (TOTP)
+  totpSecret?: string;        // Secret TOTP (base32) — gerado na configuração
 }
 
 export const defaultConfig: ConfigSistema = {
@@ -34,6 +35,7 @@ export const defaultConfig: ConfigSistema = {
   custoManutencaoKm: 0.10,
   itensPadraoOrcamento: [],
   mfaEnabled: false,
+  totpSecret: undefined,
 };
 
 // ─── CLIENTE ────────────────────────────────────────────────────────────────
