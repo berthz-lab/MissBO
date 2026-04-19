@@ -17,7 +17,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 
 /* ── Constantes ─────────────────────────────────────────────────────── */
-const tiposAgendamento: { value: TipoAgendamento; label: string; color: string; dot: string }[] = [
+const tiposAgendamento: { value: TipoAgendamento; label: string; color: string; dot: string; semCliente?: boolean }[] = [
   { value: 'consulta',       label: 'Consulta Inicial', color: 'bg-blue-100 text-blue-800',           dot: 'bg-blue-500' },
   { value: 'primeira_prova', label: '1ª Prova',         color: 'bg-brand-gold/15 text-brand-gold-d',  dot: 'bg-brand-gold' },
   { value: 'segunda_prova',  label: '2ª Prova',         color: 'bg-purple-100 text-purple-800',       dot: 'bg-purple-500' },
@@ -29,6 +29,8 @@ const tiposAgendamento: { value: TipoAgendamento; label: string; color: string; 
   { value: 'ajuste',         label: 'Ajuste',           color: 'bg-orange-100 text-orange-800',       dot: 'bg-orange-500' },
   { value: 'entrega',        label: 'Entrega',          color: 'bg-emerald-100 text-emerald-800',     dot: 'bg-emerald-500' },
   { value: 'reuniao',        label: 'Reunião',          color: 'bg-gray-100 text-gray-800',           dot: 'bg-gray-500' },
+  { value: 'folga',          label: 'Folga',            color: 'bg-slate-100 text-slate-600',         dot: 'bg-slate-400', semCliente: true },
+  { value: 'ferias',         label: 'Férias',           color: 'bg-green-100 text-green-700',         dot: 'bg-green-500', semCliente: true },
 ];
 
 const statusAg = [
@@ -76,7 +78,7 @@ export function Agenda() {
   const { clearPersist, hasPersisted } = useFormPersist('agenda', form, setForm, modalOpen && !editingAg);
   useEffect(() => { if (hasPersisted) setModalOpen(true); }, [hasPersisted]);
 
-  const getCliente = (id: string) => clientes.find(c => c.id === id);
+  const getCliente = (id: string | undefined) => id ? clientes.find(c => c.id === id) : undefined;
   const today = new Date();
 
   /* Alertas */
@@ -124,7 +126,7 @@ export function Agenda() {
   const openEdit = (a: Agendamento) => {
     setEditingAg(a);
     setForm({
-      clienteId: a.clienteId, tipo: a.tipo, data: a.data, hora: a.hora,
+      clienteId: a.clienteId ?? '', tipo: a.tipo, data: a.data, hora: a.hora,
       duracao: a.duracao, descricao: a.descricao || '', status: a.status,
     });
     setModalOpen(true);
@@ -143,11 +145,15 @@ export function Agenda() {
     a.status !== 'cancelado',
   );
 
+  const tipoAtual = tiposAgendamento.find(t => t.value === form.tipo);
+  const semCliente = tipoAtual?.semCliente ?? false;
+
   const handleSave = () => {
-    if (!form.clienteId) return;
+    if (!semCliente && !form.clienteId) return;
     const ag: Agendamento = {
       id: editingAg?.id || genId(),
-      clienteId: form.clienteId, tipo: form.tipo, data: form.data, hora: form.hora,
+      clienteId: semCliente ? undefined : form.clienteId,
+      tipo: form.tipo, data: form.data, hora: form.hora,
       duracao: Number(form.duracao), descricao: form.descricao || undefined,
       status: form.status, createdAt: editingAg?.createdAt || new Date().toISOString(),
     };
@@ -515,17 +521,19 @@ export function Agenda() {
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="label">Cliente *</label>
-              <select
-                className="input-field"
-                value={form.clienteId}
-                onChange={e => setForm(p => ({ ...p, clienteId: e.target.value }))}
-              >
-                <option value="">Selecione...</option>
-                {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </div>
+            {!semCliente && (
+              <div className="col-span-2">
+                <label className="label">Cliente *</label>
+                <select
+                  className="input-field"
+                  value={form.clienteId}
+                  onChange={e => setForm(p => ({ ...p, clienteId: e.target.value }))}
+                >
+                  <option value="">Selecione...</option>
+                  {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
+              </div>
+            )}
             <div className="col-span-2">
               <label className="label">Tipo de Compromisso</label>
               <select
@@ -604,7 +612,7 @@ export function Agenda() {
 
           <div className="flex gap-3 pt-2">
             <button onClick={() => setModalOpen(false)} className="btn-secondary flex-1 justify-center">Cancelar</button>
-            <button onClick={handleSave} className="btn-primary flex-1 justify-center" disabled={!form.clienteId}>
+            <button onClick={handleSave} className="btn-primary flex-1 justify-center" disabled={!semCliente && !form.clienteId}>
               {editingAg ? 'Salvar' : 'Agendar'}
             </button>
           </div>

@@ -21,7 +21,7 @@ const tipoLabels: Record<string, string> = {
 export function Dashboard() {
   const { clientes, agendamentos, pagamentos, parcelasProva, fichasTecnicas, contratos, valoresOcultos } = useApp();
   const navigate = useNavigate();
-  const getCliente = (id: string) => clientes.find(c => c.id === id);
+  const getCliente = (id: string | undefined) => id ? clientes.find(c => c.id === id) : undefined;
 
   const today = new Date();
 

@@ -200,7 +200,7 @@ function fromItemOrcamento(orcamentoId: string, i: ItemOrcamento): Partial<ItemO
 // ── Agendamento ───────────────────────────────────────────────────────────────
 function toAgendamento(r: AgendamentoRow): Agendamento {
   return {
-    id: r.id, clienteId: r.cliente_id,
+    id: r.id, clienteId: r.cliente_id ?? undefined,
     tipo: r.tipo as Agendamento['tipo'], data: r.data,
     hora: (r.hora ?? '').slice(0, 5), // 'HH:MM:SS' → 'HH:MM'
     duracao: r.duracao, descricao: ou(r.descricao),
@@ -209,7 +209,7 @@ function toAgendamento(r: AgendamentoRow): Agendamento {
 }
 function fromAgendamento(a: Agendamento): Partial<AgendamentoRow> {
   return {
-    id: a.id, cliente_id: a.clienteId, tipo: a.tipo, data: a.data,
+    id: a.id, cliente_id: a.clienteId ?? null, tipo: a.tipo, data: a.data,
     hora: a.hora, duracao: a.duracao, descricao: a.descricao ?? null,
     status: a.status, created_at: a.createdAt,
   };

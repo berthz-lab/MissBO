@@ -183,10 +183,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── Sessão Supabase ────────────────────────────────────────────────────────
+  const MFA_PENDING_KEY = 'missbo_mfa_pending';
+
   useEffect(() => {
     if (!isSupabaseConfigured) { setLoading(false); return; }
 
     supabase.auth.getSession().then(({ data }) => {
+      // Se o flag de MFA pendente está no sessionStorage (ex: PWA recarregou durante TOTP),
+      // não considera a sessão como logada — mantém na tela de TOTP
+      if (sessionStorage.getItem(MFA_PENDING_KEY) === 'true' && data.session) {
+        mfaPendingRef.current = true;
+        setLoading(false);
+        return;
+      }
       const logged = !!data.session;
       setIsLoggedIn(logged);
       if (logged) loadAll().catch(console.error);
@@ -236,25 +245,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, senha: string) => {
     if (!isSupabaseConfigured) return { error: 'Supabase não configurado.', mfaRequired: false };
 
-    // ⚠️ Bloqueia onAuthStateChange ANTES do signInWithPassword.
-    // O evento SIGNED_IN dispara durante o await — se o flag só fosse setado depois,
-    // o listener consideraria o usuário logado e pularia o TOTP.
-    if (config.mfaEnabled) mfaPendingRef.current = true;
+    // Bloqueia onAuthStateChange durante toda a verificação (o evento SIGNED_IN
+    // dispara durante o await e viria antes de qualquer flag setado depois)
+    mfaPendingRef.current = true;
 
     const { error: pwError } = await supabase.auth.signInWithPassword({ email, password: senha });
     if (pwError) {
-      mfaPendingRef.current = false; // senha errada — libera o listener
+      mfaPendingRef.current = false;
       return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
     }
 
-    // Se MFA desativado → login direto
-    if (!config.mfaEnabled) {
+    // Busca config diretamente do DB (temos sessão válida agora).
+    // Não depende do localStorage que pode estar desatualizado ou ausente.
+    let mfaEnabled = config.mfaEnabled;
+    try {
+      const fresh = await configDb.get();
+      mfaEnabled = fresh.mfaEnabled;
+      // Atualiza estado e cache local com os valores autoritativos do DB
+      setConfig(fresh);
+      configStorage.save(fresh);
+    } catch { /* falha silenciosa — usa localStorage como fallback */ }
+
+    if (!mfaEnabled) {
+      mfaPendingRef.current = false;
       setIsLoggedIn(true);
       loadAll().catch(console.error);
       return { error: null, mfaRequired: false };
     }
 
-    // MFA via TOTP — aguarda verificação do código antes de liberar a sessão
+    // MFA necessário — persiste o flag no sessionStorage para sobreviver ao
+    // reload do PWA (ex: usuário sai pro Authenticator e o app recarrega)
+    sessionStorage.setItem(MFA_PENDING_KEY, 'true');
     return { error: null, mfaRequired: true };
   }, [config.mfaEnabled, loadAll]);
 
@@ -264,6 +285,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!secret) return false;
     const valid = verifyTotp(secret, code);
     if (valid) {
+      sessionStorage.removeItem(MFA_PENDING_KEY);
       mfaPendingRef.current = false;
       setIsLoggedIn(true);
       loadAll().catch(console.error);
@@ -278,6 +300,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     mfaPendingRef.current = false;
+    sessionStorage.removeItem(MFA_PENDING_KEY);
     if (isSupabaseConfigured) await supabase.auth.signOut();
     setIsLoggedIn(false);
   }, []);

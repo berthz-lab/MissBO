@@ -119,7 +119,7 @@ export interface OrcamentoRow {
 
 export interface AgendamentoRow {
   id: string;
-  cliente_id: string;
+  cliente_id: string | null; // null para folga/férias (sem cliente vinculado)
   tipo: string;
   data: string;
   hora: string;

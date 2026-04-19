@@ -25,9 +25,11 @@ export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/** Validates Brazilian phone (10-11 digits) */
+/** Validates phone — Brazilian (10-11 digits) or international (starts with +, 7-15 digits) */
 export function isValidPhone(phone: string): boolean {
-  const digits = phone.replace(/\D/g, '');
+  const trimmed = phone.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  if (trimmed.startsWith('+')) return digits.length >= 7 && digits.length <= 15;
   return digits.length === 10 || digits.length === 11;
 }
 
@@ -40,8 +42,13 @@ export function formatCPF(value: string): string {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
-/** Formats phone: (XX) XXXXX-XXXX or (XX) XXXX-XXXX */
+/** Formats phone — applies Brazilian mask or passes international numbers through as-is */
 export function formatPhone(value: string): string {
+  if (value.trimStart().startsWith('+')) {
+    // Internacional: permite dígitos, espaços, hífens e parênteses — sem máscara rígida
+    return value.replace(/[^\d\s\+\-\(\)]/g, '');
+  }
+  // Máscara brasileira
   const digits = value.replace(/\D/g, '').slice(0, 11);
   if (digits.length <= 2) return digits;
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;

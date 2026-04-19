@@ -32,6 +32,10 @@ function mapsRouteUrl(origin: string, destination: string) {
 function mapsSearchUrl(address: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
+// Rota sem origem explícita — o Google Maps usa a localização atual do dispositivo
+function mapsRouteFromHere(destination: string) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+}
 
 const statusClienteOpt = STATUS_CLIENTE;
 
@@ -47,6 +51,8 @@ const tiposAg: { value: TipoAgendamento; label: string }[] = [
   { value: 'ajuste',         label: 'Ajuste' },
   { value: 'entrega',        label: 'Entrega' },
   { value: 'reuniao',        label: 'Reunião' },
+  { value: 'folga',          label: 'Folga' },
+  { value: 'ferias',         label: 'Férias' },
 ];
 
 const statusAg = [
@@ -202,7 +208,13 @@ export function ClientePerfil() {
     ? differenceInDays(parseISO(proximaProva.data), new Date())
     : null;
 
-  const whatsappUrl = (tel: string) => `https://wa.me/55${tel.replace(/\D/g, '')}`;
+  const whatsappUrl = (tel: string) => {
+    const digits = tel.replace(/\D/g, '');
+    // Internacional (começa com +): usa os dígitos diretamente (já incluem country code)
+    if (tel.trim().startsWith('+')) return `https://wa.me/${digits}`;
+    // Brasileiro: adiciona DDI 55
+    return `https://wa.me/55${digits}`;
+  };
   const proxProvaLabel = proximaProva ? (tiposAg.find(t => t.value === proximaProva.tipo)?.label ?? 'Prova') : '';
 
   const recebido = pagamentos.filter(p => p.status === 'pago').reduce((a, p) => a + p.valor, 0);
@@ -789,21 +801,22 @@ export function ClientePerfil() {
                 </p>
                 <p className="text-sm font-medium text-brand-charcoal mb-2">{cliente.endereco}</p>
                 <div className="flex flex-wrap gap-2">
-                  {config.enderecoOrigem ? (
+                  {/* Rota a partir da localização atual do dispositivo (GPS) */}
+                  <a
+                    href={mapsRouteFromHere(cliente.endereco)}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <Navigation size={11}/> Da minha localização
+                  </a>
+                  {/* Rota a partir do ateliê (se endereço de origem configurado) */}
+                  {config.enderecoOrigem && (
                     <a
                       href={mapsRouteUrl(config.enderecoOrigem, cliente.endereco)}
                       target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      className="inline-flex items-center gap-1.5 text-xs bg-white text-blue-600 border border-blue-300 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors font-medium"
                     >
-                      <Navigation size={11}/> Traçar Rota
-                    </a>
-                  ) : (
-                    <a
-                      href={mapsSearchUrl(cliente.endereco)}
-                      target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      <Navigation size={11}/> Ver no Maps
+                      <Navigation size={11}/> Do ateliê
                     </a>
                   )}
                   {cliente.distanciaKm && (
@@ -1723,7 +1736,7 @@ export function ClientePerfil() {
               a.status !== 'cancelado',
             );
             if (!conflito) return null;
-            const cliConflito = app.getCliente(conflito.clienteId);
+            const cliConflito = conflito.clienteId ? app.getCliente(conflito.clienteId) : undefined;
             return (
               <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
                 <AlertTriangle size={13} className="flex-shrink-0" />

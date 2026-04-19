@@ -229,7 +229,7 @@ export function Clientes() {
             <div>
               <label className="label">Telefone / WhatsApp *</label>
               <input className={`input-field ${errors.telefone ? 'border-red-400 focus:border-red-400' : ''}`}
-                placeholder="(11) 99999-9999" value={form.telefone}
+                placeholder="(11) 99999-9999 ou +1 555 1234567" value={form.telefone}
                 onChange={e => setForm(p => ({ ...p, telefone: formatPhone(e.target.value) }))} />
               {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone}</p>}
             </div>

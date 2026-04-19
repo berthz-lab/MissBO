@@ -23,6 +23,12 @@ export function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Se o PWA recarregou durante a etapa TOTP (ex: usuário foi pro Authenticator),
+    // vai direto para o step TOTP sem pedir e-mail/senha novamente
+    if (sessionStorage.getItem('missbo_mfa_pending') === 'true') setStep('totp');
+  }, []);
+
+  useEffect(() => {
     if (step === 'totp') setTimeout(() => otpRefs[0].current?.focus(), 50);
   }, [step]);
 

@@ -210,11 +210,13 @@ export type TipoAgendamento =
   | 'prova_final'
   | 'ajuste'
   | 'entrega'
-  | 'reuniao';
+  | 'reuniao'
+  | 'folga'
+  | 'ferias';
 
 export interface Agendamento {
   id: string;
-  clienteId: string;
+  clienteId?: string; // opcional para folga/férias (sem cliente vinculado)
   tipo: TipoAgendamento;
   data: string;
   hora: string;
