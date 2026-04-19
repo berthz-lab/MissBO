@@ -236,20 +236,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, senha: string) => {
     if (!isSupabaseConfigured) return { error: 'Supabase não configurado.', mfaRequired: false };
 
-    // Etapa 1: verifica senha
-    const { error: pwError } = await supabase.auth.signInWithPassword({ email, password: senha });
-    if (pwError) return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
+    // ⚠️ Bloqueia onAuthStateChange ANTES do signInWithPassword.
+    // O evento SIGNED_IN dispara durante o await — se o flag só fosse setado depois,
+    // o listener consideraria o usuário logado e pularia o TOTP.
+    if (config.mfaEnabled) mfaPendingRef.current = true;
 
-    // Se MFA desativado nas configurações → login direto, sem OTP
+    const { error: pwError } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (pwError) {
+      mfaPendingRef.current = false; // senha errada — libera o listener
+      return { error: 'E-mail ou senha incorretos.', mfaRequired: false };
+    }
+
+    // Se MFA desativado → login direto
     if (!config.mfaEnabled) {
       setIsLoggedIn(true);
       loadAll().catch(console.error);
       return { error: null, mfaRequired: false };
     }
 
-    // MFA via TOTP (Google Authenticator) — sessão de senha é mantida
-    // O guard impede que loadAll() seja chamado antes da verificação do código
-    mfaPendingRef.current = true;
+    // MFA via TOTP — aguarda verificação do código antes de liberar a sessão
     return { error: null, mfaRequired: true };
   }, [config.mfaEnabled, loadAll]);
 
