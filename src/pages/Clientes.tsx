@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, Heart, Phone, Mail, MapPin, Eye, AlertTriangle } from 'lucide-react';
 import { Pagination, usePagination } from '../components/ui/Pagination';
@@ -36,6 +37,7 @@ export function Clientes() {
   const [form, setForm] = useState({ ...emptyCliente });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { clearPersist } = useFormPersist('cliente', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingCliente);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -88,6 +90,7 @@ export function Clientes() {
       createdAt: editingCliente?.createdAt || new Date().toISOString(),
     };
     saveCliente(cliente);
+    clearPersist();
     setModalOpen(false);
   };
 

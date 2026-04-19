@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Edit2, Trash2, FileText, Printer, Paperclip, X, Link2 } from 'lucide-react';
 import { Pagination, usePagination } from '../components/ui/Pagination';
@@ -38,6 +39,7 @@ export function Contratos() {
   const [editingContrato, setEditingContrato] = useState<Contrato | null>(null);
   const [form, setForm]                 = useState({ ...emptyContrato });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const { clearPersist } = useFormPersist('contrato', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingContrato);
 
   /* Anexo */
   const fileRef = useRef<HTMLInputElement>(null);
@@ -140,6 +142,7 @@ export function Contratos() {
       createdAt: editingContrato?.createdAt || new Date().toISOString(),
     };
     saveContrato(contrato);
+    clearPersist();
     setModalOpen(false);
   };
 

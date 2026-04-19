@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { Plus, Search, Edit2, Trash2, ClipboardList } from 'lucide-react';
 import { Pagination, usePagination } from '../components/ui/Pagination';
 import { useApp } from '../context/AppContext';
@@ -50,6 +51,7 @@ export function FichasTecnicas() {
   const [editingFicha, setEditingFicha] = useState<FichaTecnica | null>(null);
   const [form, setForm] = useState({ ...emptyFicha });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const { clearPersist } = useFormPersist('ficha', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingFicha);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
@@ -117,6 +119,7 @@ export function FichasTecnicas() {
       createdAt: editingFicha?.createdAt || new Date().toISOString(),
     };
     saveFicha(ficha);
+    clearPersist();
     setModalOpen(false);
   };
 

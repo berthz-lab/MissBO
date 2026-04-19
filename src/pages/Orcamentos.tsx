@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useFormPersist } from '../hooks/useFormPersist';
 import { Plus, Search, Trash2, Receipt, Printer, Edit2, Car, TrendingUp } from 'lucide-react';
 import { fmtMoney, HIDDEN_VALUE } from '../utils/format';
 import { STATUS_ORCAMENTO } from '../utils/constants';
@@ -129,6 +130,7 @@ export function Orcamentos() {
   const [form,          setForm]          = useState({ ...EMPTY_FORM });
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [arredondar,    setArredondar]    = useState(false);
+  const { clearPersist } = useFormPersist('orcamento', form as unknown as Record<string, unknown>, setForm as (f: Record<string, unknown>) => void, modalOpen && !editingOrc);
 
   const getCliente = (id: string) => clientes.find(c => c.id === id);
 
@@ -327,6 +329,7 @@ export function Orcamentos() {
       createdAt:   editingOrc?.createdAt || new Date().toISOString(),
     };
     saveOrcamento(orc);
+    clearPersist();
     setModalOpen(false);
   };
 
