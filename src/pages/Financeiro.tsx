@@ -145,8 +145,8 @@ export function Financeiro() {
       });
       const provasDoMes = provasValidas.filter(p => {
         if (p.pago || p.statusProva === 'cancelada') return false;
-        const ds = p.dataProva || p.createdAt.split('T')[0];
-        const d = parseISO(ds);
+        if (!p.dataProva) return false; // sem data agendada: não projetar no gráfico
+        const d = parseISO(p.dataProva);
         return isWithinInterval(d, { start, end });
       });
       return {

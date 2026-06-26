@@ -218,12 +218,17 @@ export function ClientePerfil() {
   const proxProvaLabel = proximaProva ? (tiposAg.find(t => t.value === proximaProva.tipo)?.label ?? 'Prova') : '';
 
   const recebido = pagamentos.filter(p => p.status === 'pago').reduce((a, p) => a + p.valor, 0);
-  // "A receber" = pagamentos manuais pendentes + parcelas de prova ainda não pagas
-  const pendentePag    = pagamentos.filter(p => p.status !== 'pago').reduce((a, p) => a + p.valor, 0);
+  // "A receber" = pagamentos manuais não pagos + parcelas de prova pendentes
+  const pendentePag    = pagamentos.filter(p => p.status === 'pendente').reduce((a, p) => a + p.valor, 0);
+  const vencidoPag     = pagamentos.filter(p => p.status === 'vencido').reduce((a, p) => a + p.valor, 0);
   const pendenteProvas = parcelasProva
-    .filter(p => !p.pago && p.statusProva !== 'cancelada')
+    .filter(p => !p.pago && p.statusProva !== 'cancelada' && (!p.dataProva || p.dataProva >= hojeStr))
     .reduce((a, p) => a + p.valorParcela, 0);
-  const pendente = pendentePag + pendenteProvas;
+  const vencidoProvas  = parcelasProva
+    .filter(p => !p.pago && p.statusProva !== 'cancelada' && p.dataProva && p.dataProva < hojeStr)
+    .reduce((a, p) => a + p.valorParcela, 0);
+  const pendente = pendentePag + vencidoPag + pendenteProvas + vencidoProvas;
+  const vencido  = vencidoPag + vencidoProvas;
   const totalContrato = contratos.reduce((a, c) => a + c.valorTotal, 0);
 
   /* Provas: alertas de atraso */
@@ -685,14 +690,35 @@ export function ClientePerfil() {
               <p className="text-base font-bold text-brand-black truncate">{fmtMoney(recebido)}</p>
               <p className="text-xs text-gray-400 mt-0.5">Recebido</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-base font-bold text-amber-600 truncate">{fmtMoney(pendente)}</p>
+            <div className={`rounded-xl p-3 text-center ${vencido > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+              <p className={`text-base font-bold truncate ${vencido > 0 ? 'text-red-600' : 'text-amber-600'}`}>{fmtMoney(pendente)}</p>
               <p className="text-xs text-gray-400 mt-0.5">A receber</p>
+              {vencido > 0 && (
+                <p className="text-xs text-red-500 mt-0.5 flex items-center justify-center gap-1">
+                  <AlertTriangle size={9}/> {fmtMoney(vencido)} vencido
+                </p>
+              )}
             </div>
             <div className="col-span-2 bg-gray-50 rounded-xl p-3 text-center">
               <p className="text-base font-bold text-brand-black">{fmtMoney(totalContrato)}</p>
               <p className="text-xs text-gray-400 mt-0.5">Total contrato</p>
             </div>
+            {(() => {
+              const divergencia = totalContrato - recebido - pendente;
+              if (Math.abs(divergencia) < 0.01) return null;
+              const excesso = divergencia < 0;
+              return (
+                <div className={`col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl text-xs border ${
+                  excesso ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+                }`}>
+                  <AlertTriangle size={11} className="flex-shrink-0"/>
+                  {excesso
+                    ? `Cobranças excedem o contrato em ${fmtMoney(Math.abs(divergencia))}`
+                    : `Saldo de ${fmtMoney(divergencia)} não coberto pelas parcelas`
+                  }
+                </div>
+              );
+            })()}
             {(() => {
               const entrega = contratos
                 .filter(c => c.dataEntrega && c.status !== 'cancelado')
@@ -1071,7 +1097,7 @@ export function ClientePerfil() {
                   .sort((a, b) => a.numero - b.numero);
                 if (!provasContrato.length) return null;
                 const pagas     = provasContrato.filter(p => p.pago).length;
-                const totalPago = provasContrato.filter(p => p.pago).reduce((a, p) => a + p.valorParcela, 0);
+                const totalPago = provasContrato.filter(p => p.pago).reduce((a, p) => a + (p.valorPago ?? p.valorParcela), 0);
                 return (
                   <div key={c.id} className="card">
                     {/* Contract header */}
@@ -1355,20 +1381,48 @@ export function ClientePerfil() {
             <button onClick={openNewPag} className="btn-primary text-sm"><Plus size={14}/> Lançamento</button>
           </div>
           {/* Summary */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100">
               <p className="text-lg font-bold text-emerald-700">{fmtMoney(recebido)}</p>
               <p className="text-xs text-emerald-500 mt-1">Recebido</p>
             </div>
-            <div className="bg-amber-50 rounded-xl p-4 text-center border border-amber-100">
-              <p className="text-lg font-bold text-amber-600">{fmtMoney(pendente)}</p>
-              <p className="text-xs text-amber-400 mt-1">A receber</p>
+            <div className={`rounded-xl p-4 text-center border ${vencido > 0 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-100'}`}>
+              <p className={`text-lg font-bold ${vencido > 0 ? 'text-red-600' : 'text-amber-600'}`}>{fmtMoney(pendente)}</p>
+              <p className={`text-xs mt-1 ${vencido > 0 ? 'text-red-400' : 'text-amber-400'}`}>A receber</p>
+              {vencido > 0 && (
+                <p className="text-xs text-red-500 mt-0.5 flex items-center justify-center gap-1">
+                  <AlertTriangle size={9}/> {fmtMoney(vencido)} vencido
+                </p>
+              )}
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <p className="text-lg font-bold text-brand-charcoal">{fmtMoney(totalContrato)}</p>
               <p className="text-xs text-gray-400 mt-1">Total contrato</p>
             </div>
           </div>
+          {(() => {
+            const divergencia = totalContrato - recebido - pendente;
+            if (Math.abs(divergencia) < 0.01) return null;
+            const excesso = divergencia < 0;
+            return (
+              <div className={`flex items-start gap-2 px-4 py-3 rounded-xl text-xs border mb-4 ${
+                excesso ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+              }`}>
+                <AlertTriangle size={13} className="flex-shrink-0 mt-0.5"/>
+                <div>
+                  <p className="font-semibold">
+                    {excesso ? 'Cobranças excedem o valor do contrato' : 'Saldo sem cobertura nas parcelas'}
+                  </p>
+                  <p className="mt-0.5 opacity-80">
+                    {excesso
+                      ? `Recebido + A receber supera o contrato em ${fmtMoney(Math.abs(divergencia))}. Verifique se algum valor pago foi maior que o negociado.`
+                      : `Faltam ${fmtMoney(divergencia)} para cobrir o total do contrato. Adicione parcelas ou ajuste os valores.`
+                    }
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
           {(() => {
             // Pagamentos manuais (entrada, outros) — exclui os gerados por provas
             const pagsManuais = pagamentos.filter(p => !p.id.startsWith('prov-'));

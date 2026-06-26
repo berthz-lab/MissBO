@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Dispatch, SetStateAction } from 'react';
-import { Contrato, Orcamento, ParcelaProva } from '../../types';
-import { contratoDb, orcamentoDb, gerarParcelasDb, upsertArr } from '../../utils/db';
+import { Contrato, Orcamento, Pagamento, ParcelaProva } from '../../types';
+import { contratoDb, orcamentoDb, pagamentoDb, gerarParcelasDb, upsertArr } from '../../utils/db';
 import { BgFn } from './useClienteSlice';
 
 type S<T> = Dispatch<SetStateAction<T>>;
@@ -14,6 +14,7 @@ export function useContratoSlice(
     setContratos: S<Contrato[]>;
     setParcelasProva: S<ParcelaProva[]>;
     setOrcamentos: S<Orcamento[]>;
+    setPagamentos: S<Pagamento[]>;
   },
 ) {
   const saveContrato = useCallback((c: Contrato) => {
@@ -46,7 +47,11 @@ export function useContratoSlice(
   const deleteContrato = useCallback((id: string) => {
     s.setContratos(prev => prev.filter(c => c.id !== id));
     s.setParcelasProva(prev => prev.filter(p => p.contratoId !== id));
-    bg(() => contratoDb.delete(id)); // CASCADE apaga parcelas_prova
+    s.setPagamentos(prev => prev.filter(p => !p.id.startsWith(`prov-${id}-`)));
+    bg(async () => {
+      await contratoDb.delete(id); // CASCADE apaga parcelas_prova no DB
+      await pagamentoDb.deleteByContratoProvas(id); // apaga prov-* sem FK cascade
+    });
   }, [bg, s]);
 
   const getContratosByCliente = useCallback(

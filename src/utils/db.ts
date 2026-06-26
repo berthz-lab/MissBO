@@ -406,6 +406,11 @@ export const pagamentoDb = {
     const { error } = await supabase.from('pagamentos').delete().eq('id', id);
     if (error) throw error;
   },
+  deleteByContratoProvas: async (contratoId: string): Promise<void> => {
+    const { error } = await supabase
+      .from('pagamentos').delete().like('id', `prov-${contratoId}-%`);
+    if (error) throw error;
+  },
 };
 
 export const parcelaProvaDb = {
@@ -524,7 +529,7 @@ export async function gerarParcelasDb(
 
   const qtdPagas = pagas.length;
   const saldo = valorTotal - valorEntrada;
-  const jaPago = pagas.reduce((acc, p) => acc + p.valorParcela, 0);
+  const jaPago = pagas.reduce((acc, p) => acc + (p.valorPago ?? p.valorParcela), 0);
   const novasQtd = quantidadeProvas - qtdPagas;
   const valorParcela = novasQtd > 0 ? (saldo - jaPago) / novasQtd : 0;
 

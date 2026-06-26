@@ -317,7 +317,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const clienteSlice  = useClienteSlice(clientes, bg, setters);
   const fichasSlice   = useFichasSlice(medidas, fichasTecnicas, bg, { setMedidas, setFichasTecnicas });
   const orcSlice      = useOrcamentoSlice(orcamentos, bg, { setOrcamentos });
-  const contratoSlice = useContratoSlice(contratos, orcamentos, bg, { setContratos, setParcelasProva, setOrcamentos });
+  const contratoSlice = useContratoSlice(contratos, orcamentos, bg, { setContratos, setParcelasProva, setOrcamentos, setPagamentos });
   const agendaSlice   = useAgendaSlice(agendamentos, parcelasProva, bg, { setAgendamentos, setParcelasProva });
   const parcelaSlice  = useParcelaSlice(parcelasProva, agendamentos, contratos, bg, { setParcelasProva, setAgendamentos, setPagamentos });
   const finSlice      = useFinanceiroSlice(pagamentos, inspiracoes, bg, { setPagamentos, setInspiracoes });
