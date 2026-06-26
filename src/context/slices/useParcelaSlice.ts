@@ -54,8 +54,35 @@ export function useParcelaSlice(
       bg(() => pagamentoDb.delete(idToDelete));
     }
 
-    s.setParcelasProva(prev => upsertArr(prev, updated));
+    // Redistribuir saldo restante entre parcelas não pagas do mesmo contrato
+    const contratoObj = contratos.find(c => c.id === updated.contratoId);
+    const redistribuidas: ParcelaProva[] = [];
+    if (contratoObj) {
+      const todasDoContrato = parcelasProva
+        .filter(x => x.contratoId === updated.contratoId)
+        .map(x => x.id === updated.id ? updated : x);
+      const pagas     = todasDoContrato.filter(x => x.pago);
+      const naoPagas  = todasDoContrato.filter(x => !x.pago && x.statusProva !== 'cancelada');
+      if (naoPagas.length > 0) {
+        const totalPagoProvas = pagas.reduce((acc, x) => acc + (x.valorPago ?? x.valorParcela), 0);
+        const saldo = Math.max(0, contratoObj.valorTotal - contratoObj.valorEntrada - totalPagoProvas);
+        const base  = Math.floor((saldo / naoPagas.length) * 100) / 100;
+        naoPagas.forEach((x, i) => {
+          const valorParcela = i === naoPagas.length - 1
+            ? Math.round((saldo - base * (naoPagas.length - 1)) * 100) / 100
+            : base;
+          redistribuidas.push({ ...x, valorParcela });
+        });
+      }
+    }
+
+    s.setParcelasProva(prev => {
+      let result = upsertArr(prev, updated);
+      for (const r of redistribuidas) result = upsertArr(result, r);
+      return result;
+    });
     bg(() => parcelaProvaDb.save(updated));
+    redistribuidas.forEach(r => bg(() => parcelaProvaDb.save(r)));
 
     // Sync: cria/atualiza agendamento vinculado quando a parcela tem data
     const agId = `ag-${updated.id}`;
